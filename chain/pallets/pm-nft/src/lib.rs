@@ -73,7 +73,11 @@ decl_module! {
 		fn deposit_event() = default;
 
 		#[weight = 10_000 + T::DbWeight::get().reads_writes(1,1)]
-		pub fn create_nft_class(origin, class_metadata: Vec<u8>, class_data : <T as pallet_nft::Trait>::ClassData) -> dispatch::DispatchResult {
+		pub fn create_nft_class(
+			origin,
+			class_metadata: Vec<u8>, 
+			class_data : <T as pallet_nft::Trait>::ClassData
+		) -> dispatch::DispatchResult {
 			let who = ensure_signed(origin)?;
 			let r: Result<T::ClassId, DispatchError> = pallet_nft::Module::<T>::create_class(&who, class_metadata, class_data);
 			Self::deposit_event(RawEvent::NftClassCreated(who, r.unwrap()));
@@ -81,7 +85,11 @@ decl_module! {
 		}
 
 		#[weight = 10_000 + T::DbWeight::get().reads_writes(1,1)]
-		pub fn mint_nft_token(origin, class_id: T::ClassId, metadata: Vec<u8>, data: <T as pallet_nft::Trait>::TokenData) -> dispatch::DispatchResult {
+		pub fn mint_nft_token(
+			origin, 
+			class_id: T::ClassId, metadata: Vec<u8>, 
+			data: <T as pallet_nft::Trait>::TokenData
+		) -> dispatch::DispatchResult {
 			let who = ensure_signed(origin)?;
 			let r: Result<T::TokenId, DispatchError> = pallet_nft::Module::<T>::mint(&who, class_id, metadata, data);
 			Self::deposit_event(RawEvent::NftTokenMinted(who, r.unwrap()));
@@ -89,7 +97,11 @@ decl_module! {
 		}
 		
 		#[weight = 10_000 + T::DbWeight::get().reads_writes(1,1)]
-		pub fn nft_transfer(origin, dest: <T::Lookup as StaticLookup>::Source, token_class_id: T::ClassId, token_id: T::TokenId) -> DispatchResult {
+		pub fn nft_transfer(origin, 
+			dest: <T::Lookup as StaticLookup>::Source, 
+			token_class_id: T::ClassId, 
+			token_id: T::TokenId
+		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			let to: T::AccountId = T::Lookup::lookup(dest)?;
 			let _r = pallet_nft::Module::<T>::transfer(&who, &to, (token_class_id, token_id));

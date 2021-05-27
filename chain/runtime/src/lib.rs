@@ -41,8 +41,7 @@ pub use frame_support::{
 /// Import the pm-nft pallet.
 pub use pm_nft;
 
-
-/// Import the template pallet.
+/// Import the orml-nft pallet.
 pub use pallet_nft;
 
 /// An index to a block.
