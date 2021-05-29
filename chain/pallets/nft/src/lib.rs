@@ -106,7 +106,7 @@ decl_storage! {
 		/// Returns `None` if token info not set or removed.
 		pub Tokens get(fn tokens): double_map hasher(twox_64_concat) T::ClassId, hasher(twox_64_concat) T::TokenId => Option<TokenInfoOf<T>>;
 		/// Token existence check by owner and class ID.
-		pub TokensByOwner get(fn tokens_by_owner): double_map hasher(twox_64_concat) T::AccountId, hasher(twox_64_concat) (T::ClassId, T::TokenId) => Option<()>;
+		pub TokensByOwner get(fn tokens_by_owner): double_map hasher(twox_64_concat) T::AccountId, hasher(twox_64_concat) (T::ClassId, T::TokenId) => Option<(T::ClassId, T::TokenId)>;
 	}
 }
 
@@ -147,7 +147,7 @@ impl<T: Trait> Module<T> {
 
 		TokensByOwner::<T>::try_mutate_exists(from, token, |token_by_owner| -> DispatchResult {
 			ensure!(token_by_owner.take().is_some(), Error::<T>::NoPermission);
-			TokensByOwner::<T>::insert(to, token, ());
+			TokensByOwner::<T>::insert(to, token, token);
 
 			Tokens::<T>::try_mutate_exists(token.0, token.1, |token_info| -> DispatchResult {
 				let mut info = token_info.as_mut().ok_or(Error::<T>::TokenNotFound)?;
@@ -183,7 +183,7 @@ impl<T: Trait> Module<T> {
 				data,
 			};
 			Tokens::<T>::insert(class_id, token_id, token_info);
-			TokensByOwner::<T>::insert(owner, (class_id, token_id), ());
+			TokensByOwner::<T>::insert(owner, (class_id, token_id), (class_id, token_id));
 
 			Ok(token_id)
 		})
