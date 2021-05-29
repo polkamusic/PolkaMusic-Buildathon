@@ -1,0 +1,23 @@
+.has-glow {
+  fill: azure !important;
+  filter: url(#red-glow) !important;
+}
+
+.has-headphone-glow {
+  fill: aliceblue !important;
+  filter: url(#headphone-glow) !important;
+}
+
+.pom-bg {
+  fill: #e6007a;
+}
+
+#HeadPhone {
+  fill: #777da7;
+}
+
+.head {
+  fill: url(#grad1);
+}
+
+
