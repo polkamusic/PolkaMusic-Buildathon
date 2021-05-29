@@ -15,7 +15,7 @@ function Wallet(props) {
   // connecting wallet
   useEffect(() => {
     // console.log('redux kr accts', reduxState.keyringAccounts);
-    if (!reduxState || !reduxState.keyringAccounts 
+    if (!reduxState || !reduxState.keyringAccounts
       || reduxState.keyringAccounts?.length === 0) return;
     // get accounts where meta data field has source
     // meta: { source: data }, indicates account from a wallet address
@@ -55,6 +55,27 @@ function Wallet(props) {
           // console.log('kr Acct', krAcct);
           if (krAcct.address?.toString() === initialAddr.toString()) {
             if (krAcct) setKeyringAccount(krAcct);
+            // dispatch set keyring acct
+            dispatch({
+              type: ACTIONS.SET_KEYRING_ACCOUNT,
+              payload: {
+                newKeyringAccount: krAcct
+              }
+            });
+
+          }
+
+          // save burn keyring account, temp
+          const burnAddress = '5HpG9w8EBLe5XCrbczpwq5TSXvedjrBGCwqxK1iQ7qUsSWFc'; // bob_stash, temporary until burn extrinsic
+
+          if (krAcct.address?.toString() === burnAddress) {
+            console.log('burn addr', krAcct.address);
+            dispatch({
+              type: ACTIONS.SET_KEYRING_BURN_ACCOUNT,
+              payload: {
+                newKeyringBurnAccount: krAcct
+              }
+            });
           }
         })
       }
@@ -104,18 +125,31 @@ function Wallet(props) {
               newAcct: event.target?.value || ""
             }
           });
+
+          reduxState.keyringAccounts.forEach(krAcct => {
+            if (krAcct.address?.toString() === event.target?.value) {
+              // dispatch set keyring acct
+              dispatch({
+                type: ACTIONS.SET_KEYRING_ACCOUNT,
+                payload: {
+                  newKeyringAccount: krAcct
+                }
+              })
+            }
+          })
+
         }}
       >
-        {selectAddresses.length === 0
-          && (<option style={{ background: "black" }} value="option1">Wallet not available</option>)
-        }
-        {
-          selectAddresses.length > 0 && selectAddresses.map(selectAddress => (
-            <option style={{ background: "black" }} value={selectAddress.addressValue}>{selectAddress.addressDisplay}</option>
-          ))
-        }
+      {selectAddresses.length === 0
+        && (<option style={{ background: "black" }} value="option1">Wallet not available</option>)
+      }
+      {
+        selectAddresses.length > 0 && selectAddresses.map(selectAddress => (
+          <option style={{ background: "black" }} value={selectAddress.addressValue}>{selectAddress.addressDisplay}</option>
+        ))
+      }
       </Select>
-    </Box>
+    </Box >
   );
 }
 

@@ -21,7 +21,7 @@ import {
 import { easyTokensMap } from "../../../chainApis/easyTokensMap";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import callBurnEasyNfts from '../../../chainApis/callBurnEasyNfts'
 
 function NFT() {
   const reduxState = useSelector((state) => state);
@@ -34,6 +34,7 @@ function NFT() {
   const [disableBurnHardButton, setDisableBurnHardButton] = useState(true)
   const [glowHeadphones, setGlowHeadphones] = useState(false)
   const [easyNftCompleted, setEasyNftCompleted] = useState(false)
+  const [easyTupleTokens, setEasyTupleTokens] = useState(null)
   const notify = (msg) => toast(`🦄 ${msg}`, {
     position: "top-right",
     autoClose: 5000,
@@ -80,7 +81,18 @@ function NFT() {
                   setGlowHeadphones(true)
                   setEasyNftCompleted(true)
                   // burn nfts at node
-                  
+                  // console.log('nfts to burn', easyTupleTokens);
+                  const easyTupleTokensTemp = [[0, 17]]
+                  console.log('nfts to burn', easyTupleTokensTemp);
+                  for (const ezTuple of easyTupleTokensTemp) {
+                    //callBurnEasyNfts(keyringBurnAccount, nodeApi, classID, tokenID, keyringAccount) 
+                    callBurnEasyNfts(
+                      reduxState.keyringBurnAccount,
+                      reduxState.nodeApi, 
+                      ezTuple[0], ezTuple[1],
+                      reduxState.keyringAccount
+                    )
+                  }
                   notify("NFT Claimed")
                   // back to normal
                   setTimeout(() => {
@@ -158,6 +170,7 @@ function NFT() {
 
       // return [userTokenCID.words[0], userTokenTID.words[0]]
       // return [userTokens.value[0].words[0], userTokens.value[1].words[0]]
+      setEasyTupleTokens(userTokenCollection)
       return userTokenCollection
     }
     getTokensByOwnerTemp(reduxState.account, reduxState.nodeApi)
@@ -268,7 +281,7 @@ function NFT() {
             color="white"
           >
             <Text fontSize="md" color="gray.100" p={2}>
-              Easy NFT &nbsp; &nbsp; &nbsp; {nftTokens && (nftTokens.length === 16) ? `${easyNftCompleted ? 'Claimed' : 'Cleared'}!` : `${nftTokens.length}/17`}
+              Easy NFT &nbsp; &nbsp; &nbsp; {nftTokens && (nftTokens.length === 16) ? `${easyNftCompleted ? 'Claimed' : 'Cleared'}!` : `${nftTokens.length}/16`}
             </Text>
             <Text fontSize="md" color="gray.100" p={2}>
               Medium NFT &nbsp;{mediumNftTokens && (mediumNftTokens.length === 8) ? " Cleared!" : `${mediumNftTokens.length}/8`}
@@ -277,10 +290,11 @@ function NFT() {
               Hard NFT  &nbsp; &nbsp; &nbsp; {hardNftTokens && (hardNftTokens.length) === 1 ? " Cleared!" : `${hardNftTokens.length}/1`}
             </Text>
           </Box>
-    
+
           <ButtonModal
             value="Get a Coffee Mug"
-            disableBurnButton={disableBurnEasyButton}
+            // disableBurnButton={disableBurnEasyButton}
+            disableBurnButton={false}
           />
           <ButtonModal value="Get a Concert Ticket" disableBurnButton={disableBurnMediumButton} />
           <ButtonModal value="Get a BMW M5" disableBurnButton={disableBurnHardButton} />
