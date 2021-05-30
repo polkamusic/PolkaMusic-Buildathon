@@ -30,7 +30,7 @@ const notify = (msg) => toast(`🦄 ${msg}`, {
 });
 
 
-async function callMintFromSource(keyringSourceAccount, nodeApi, tokenCategory="token", tokenData=0, classID=0) {
+async function callMintFromSource(keyringSourceAccount, nodeApi, tokenCategory = "token", tokenData = 0, classID = 0) {
   if (keyringSourceAccount && nodeApi) {
 
     // Constuct the keying after the API (crypto has an async init)
@@ -57,7 +57,7 @@ async function callMintFromSource(keyringSourceAccount, nodeApi, tokenCategory="
         tokenData
       );
 
-    const tx = await nftMint.signAndSend(alice,{ nonce: -1});
+    const tx = await nftMint.signAndSend(alice, { nonce: -1 });
     notify(`NFT ${tokenCategory} minted with hash ${tx}`)
     console.log((`NFT ${tokenCategory} minted with hash ${tx}`));
   }
@@ -279,15 +279,15 @@ function MusicPlayer() {
     x.get();
   }, [currentTime, duration]);
 
+  const getRandomInt = (min, max) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
   const sendData = (values) => {
     axios.post("http://localhost:5000/api/reports", values).then((res) => {
       console.log('reports data', res.data);
-      // if current Time = 10 or 50 sec
-      // then trigger nft mint/ transfer from source to user e.g. current wallet, 
-      // sign without popup
-      if (currentTime > 10.0) {
-        // callMintFromSource
-        // (keyringSourceAccount, nodeApi, keyringAccount, tokenCategory="token", tokenData=0, classID=0)
+
+      if (currentTime > 30.0) {
         callMintFromSource(
           reduxState.keyringSourceAccount,
           reduxState.nodeApi,
@@ -298,12 +298,7 @@ function MusicPlayer() {
 
         getTokensByOwnerTemp(reduxState.keyringSourceAccount.address, reduxState.nodeApi)
           .then(results => {
-            console.log('source token tuples', results);
-            // setSourceTupleTokens(results)
             const recentMint = results[results.length - 1]
-            // setSourceLastMindtedTuple(recentMint)
-            console.log('recent mint', recentMint);
-
             if (recentMint) {
               callTransferFromSource(
                 reduxState.keyringSourceAccount,
@@ -313,11 +308,61 @@ function MusicPlayer() {
                 reduxState.keyringAccount
               ).catch(console.error)
             }
-        });
+          });
+      }
 
-        // callTransferFromSource(keyringSourceAccount, nodeApi, classID, tokenID, keyringAccount)
-        const mintedNft = sourceLastMindtedTuple
-   
+      // medium nft mint
+      if (currentTime > 20.0 && currentTime < 30.0) {
+        // random 1 - 8
+        const mrand = getRandomInt(1,8)
+        callMintFromSource(
+          reduxState.keyringSourceAccount,
+          reduxState.nodeApi,
+          `M${mrand}`,
+          0,
+          0
+        ).catch(console.error)
+
+        getTokensByOwnerTemp(reduxState.keyringSourceAccount.address, reduxState.nodeApi)
+          .then(results => {
+            const recentMint = results[results.length - 1]
+            if (recentMint) {
+              callTransferFromSource(
+                reduxState.keyringSourceAccount,
+                reduxState.nodeApi,
+                recentMint[0],
+                recentMint[1],
+                reduxState.keyringAccount
+              ).catch(console.error)
+            }
+          });
+      }
+
+       // easy nft mint
+       if (currentTime > 10.0 && currentTime < 20.0) {
+        // random 1 - 16
+        const mrand = getRandomInt(1,16)
+        callMintFromSource(
+          reduxState.keyringSourceAccount,
+          reduxState.nodeApi,
+          `E${mrand}`,
+          0,
+          0
+        ).catch(console.error)
+
+        getTokensByOwnerTemp(reduxState.keyringSourceAccount.address, reduxState.nodeApi)
+          .then(results => {
+            const recentMint = results[results.length - 1]
+            if (recentMint) {
+              callTransferFromSource(
+                reduxState.keyringSourceAccount,
+                reduxState.nodeApi,
+                recentMint[0],
+                recentMint[1],
+                reduxState.keyringAccount
+              ).catch(console.error)
+            }
+          });
       }
     });
   };

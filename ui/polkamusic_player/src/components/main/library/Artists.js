@@ -35,7 +35,8 @@ function Artists(props) {
       <HStack mx={32} spacing="24px">
         <Box width="200px" borderRadius="xl" background="blue.900">
           <Image
-            src="https://via.placeholder.com/200"
+            // src="https://via.placeholder.com/200"
+            src="https://upload.wikimedia.org/wikipedia/en/d/d1/Rihanna_-_Loud.png"
             alt="Rihana"
             objectFit="cover"
             borderRadius="xl"
@@ -56,7 +57,7 @@ function Artists(props) {
         </Box>
         <Box width="200px" borderRadius="xl" background="purple.700">
           <Image
-            src="https://via.placeholder.com/200"
+            src="https://i.pinimg.com/originals/3f/9b/1a/3f9b1ab0095226f5af5f5720e1a49acd.jpg"
             alt="Rihana"
             objectFit="cover"
             borderRadius="xl"
@@ -77,7 +78,7 @@ function Artists(props) {
         </Box>
         <Box width="200px" borderRadius="xl" background="pink.900">
           <Image
-            src="https://via.placeholder.com/200"
+            src="https://i.pinimg.com/originals/7c/70/60/7c706032eb0b13161d9d3f1a6b9063d7.jpg"
             alt="Rihana"
             objectFit="cover"
             borderRadius="xl"
@@ -98,7 +99,7 @@ function Artists(props) {
         </Box>
         <Box width="200px" borderRadius="xl" background="cyan.900">
           <Image
-            src="https://via.placeholder.com/200"
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdH9GHSeXi6zKfVNUYi8TPmOZ-1LbHzFzIRg&usqp=CAU"
             alt="Rihana"
             objectFit="cover"
             borderRadius="xl"

@@ -19,6 +19,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { easyTokensMap } from "../../../chainApis/easyTokensMap";
+import { mediumTokensMap } from "../../../chainApis/mediumTokensMap";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import callBurnEasyNfts from '../../../chainApis/callBurnEasyNfts'
@@ -214,9 +215,13 @@ function NFT() {
           if (results) setNftTokens(results)
 
           let ezcounter = 0;
+          let medcounter = 0;
           let hcounter = false;
           let prevToken = "";
+          let prevMedToken = "";
+
           let ezNftTokens = [];
+          let medNftTokens = [];
           let hardNftTokens = [];
           for (let i = 0; i < results.length; i++) {
             const token = results[i];
@@ -227,6 +232,12 @@ function NFT() {
               prevToken = token
             }
 
+            if (mediumTokensMap[token] && prevMedToken !== token) {
+              medcounter++
+              medNftTokens.push(token)
+              prevMedToken = token
+            }
+
             if (token === "H") { 
               hcounter = true
               hardNftTokens.push(token)
@@ -235,11 +246,14 @@ function NFT() {
           }
 
           console.log('ez counter', ezcounter);
+          console.log('med counter', medcounter);
+
           console.log('h counter', hcounter);
 
           ezcounter === 16 ? setDisableBurnEasyButton(false) : setDisableBurnEasyButton(true)
           setDisableBurnHardButton(!hcounter)
           setEasyNftTokens(ezNftTokens)
+          setMediumNftTokens(medNftTokens)
           setHardNftTokens(hardNftTokens)
         })
     }
