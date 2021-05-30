@@ -5,7 +5,8 @@ const initialState = {
   nodeApi: null,
   keyringAccounts: [],
   keyringAccount: null,
-  keyringBurnAccount: null
+  keyringBurnAccount: null,
+  keyringSourceAccount: null
 }
 
 function accountReducer(state = initialState, action) {
@@ -53,6 +54,15 @@ function accountReducer(state = initialState, action) {
       return {
         ...state,
         keyringBurnAccount: newKeyringBurnAccount,
+      };
+    }
+
+    case ACTIONS.SET_KEYRING_SOURCE_ACCOUNT: {
+      const { newKeyringSourceAccount } = action.payload;
+
+      return {
+        ...state,
+        keyringSourceAccount: newKeyringSourceAccount,
       };
     }
   }

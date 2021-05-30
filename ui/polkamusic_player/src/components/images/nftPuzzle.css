@@ -1,5 +1,5 @@
 .has-glow {
-  fill: azure !important;
+  fill: #e6007a !important;
   filter: url(#red-glow) !important;
 }
 
@@ -9,7 +9,7 @@
 }
 
 .pom-bg {
-  fill: #e6007a;
+  fill: azure;
 }
 
 #HeadPhone {

@@ -66,14 +66,27 @@ function Wallet(props) {
           }
 
           // save burn keyring account, temp
-          const burnAddress = '5HpG9w8EBLe5XCrbczpwq5TSXvedjrBGCwqxK1iQ7qUsSWFc'; // bob_stash, temporary until burn extrinsic
-
+          const burnAddress2 = '5DfhGyQdFobKM8NsWvEeAKk5EQQgYe9AydgJ7rMB6E1EqRzV' // burn
+          const burnAddress = '5HpG9w8EBLe5XCrbczpwq5TSXvedjrBGCwqxK1iQ7qUsSWFc'; // bob-stash, temporary until burn extrinsic
           if (krAcct.address?.toString() === burnAddress) {
             console.log('burn addr', krAcct.address);
             dispatch({
               type: ACTIONS.SET_KEYRING_BURN_ACCOUNT,
               payload: {
                 newKeyringBurnAccount: krAcct
+              }
+            });
+          }
+
+          // save source keyring account, temp Alice
+          // alice, temporary until offchain worker is functional
+          const sourceAddress = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY';
+          if (krAcct.address?.toString() === sourceAddress) {
+            console.log('source addr', krAcct.address);
+            dispatch({
+              type: ACTIONS.SET_KEYRING_SOURCE_ACCOUNT,
+              payload: {
+                newKeyringSourceAccount: krAcct
               }
             });
           }
@@ -140,14 +153,14 @@ function Wallet(props) {
 
         }}
       >
-      {selectAddresses.length === 0
-        && (<option style={{ background: "black" }} value="option1">Wallet not available</option>)
-      }
-      {
-        selectAddresses.length > 0 && selectAddresses.map(selectAddress => (
-          <option style={{ background: "black" }} value={selectAddress.addressValue}>{selectAddress.addressDisplay}</option>
-        ))
-      }
+        {selectAddresses.length === 0
+          && (<option style={{ background: "black" }} value="option1">Wallet not available</option>)
+        }
+        {
+          selectAddresses.length > 0 && selectAddresses.map(selectAddress => (
+            <option style={{ background: "black" }} value={selectAddress.addressValue}>{selectAddress.addressDisplay}</option>
+          ))
+        }
       </Select>
     </Box >
   );
