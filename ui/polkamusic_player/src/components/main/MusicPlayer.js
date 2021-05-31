@@ -156,8 +156,8 @@ async function callTransferFromSource(keyringSourceAccount, nodeApi, classID, to
       );
 
     const tx = await nft_transfer.signAndSend(alice, { nonce: -1 });
-    notify(`NFT transferred with hash ${tx} and id ${tokenID}`)
-    console.log((`NFT transferred with hash ${tx} and id ${tokenID}`));
+    notify(`NFT transferred with hash ${tx}`)
+    console.log((`NFT transferred with hash ${tx}`));
   }
 }
 
