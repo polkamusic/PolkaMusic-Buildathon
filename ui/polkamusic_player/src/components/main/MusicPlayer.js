@@ -74,13 +74,14 @@ async function getTokensByOwnerTemp(addr, api) {
     api.query.nftModule.classes([])
   ]);
 
-  console.log('token count', tokenClasses.value.total_issuance.words[0]);
-  const tokenCount = tokenClasses?.value?.total_issuance.words[0] || 0;
+  // console.log('token count', tokenClasses.value.total_issuance.words[0]);
+  const tokenCount = tokenClasses?.value?.total_issuance?.words[0] || 0;
 
   // query owner tokens, and push to sourceTokenCollection 
   let sourceTokenCollectionTemp = [];
   let tokenCountAry = [];
-  for (let t = 0; t < tokenCount; t++) { tokenCountAry.push(t) }
+  console.log('tokenCount', tokenCount);
+  for (let t = 0; t <= tokenCount; t++) { tokenCountAry.push(t) }
   console.log('token count array', tokenCountAry);
   for (const tokencount of tokenCountAry) {
     const usertoken = await api.query.nftModule.tokensByOwner(addr, [0, tokencount])
@@ -296,25 +297,27 @@ function MusicPlayer() {
           0
         ).catch(console.error)
 
-        getTokensByOwnerTemp(reduxState.keyringSourceAccount.address, reduxState.nodeApi)
-          .then(results => {
-            const recentMint = results[results.length - 1]
-            if (recentMint) {
-              callTransferFromSource(
-                reduxState.keyringSourceAccount,
-                reduxState.nodeApi,
-                recentMint[0],
-                recentMint[1],
-                reduxState.keyringAccount
-              ).catch(console.error)
-            }
-          });
+        setTimeout(() => {
+          getTokensByOwnerTemp(reduxState.keyringSourceAccount.address, reduxState.nodeApi)
+            .then(results => {
+              const recentMint = results[results.length - 1]
+              if (recentMint) {
+                callTransferFromSource(
+                  reduxState.keyringSourceAccount,
+                  reduxState.nodeApi,
+                  recentMint[0],
+                  recentMint[1],
+                  reduxState.keyringAccount
+                ).catch(console.error)
+              }
+            });
+        }, 9000);
       }
 
       // medium nft mint
-      if (currentTime > 20.0 && currentTime < 30.0) {
+      if (currentTime > 20.0 && currentTime <= 30.0) {
         // random 1 - 8
-        const mrand = getRandomInt(1,8)
+        const mrand = getRandomInt(1, 8)
         callMintFromSource(
           reduxState.keyringSourceAccount,
           reduxState.nodeApi,
@@ -323,25 +326,28 @@ function MusicPlayer() {
           0
         ).catch(console.error)
 
-        getTokensByOwnerTemp(reduxState.keyringSourceAccount.address, reduxState.nodeApi)
-          .then(results => {
-            const recentMint = results[results.length - 1]
-            if (recentMint) {
-              callTransferFromSource(
-                reduxState.keyringSourceAccount,
-                reduxState.nodeApi,
-                recentMint[0],
-                recentMint[1],
-                reduxState.keyringAccount
-              ).catch(console.error)
-            }
-          });
+        setTimeout(() => {
+          getTokensByOwnerTemp(reduxState.keyringSourceAccount.address, reduxState.nodeApi)
+            .then(results => {
+              console.log('medium results', results);
+              const recentMint = results[results.length - 1]
+              if (recentMint) {
+                callTransferFromSource(
+                  reduxState.keyringSourceAccount,
+                  reduxState.nodeApi,
+                  recentMint[0],
+                  recentMint[1],
+                  reduxState.keyringAccount
+                ).catch(console.error)
+              }
+            });
+        }, 9000);
       }
 
-       // easy nft mint
-       if (currentTime > 10.0 && currentTime < 20.0) {
+      // easy nft mint
+      if (currentTime > 10.0 && currentTime <= 20.0) {
         // random 1 - 16
-        const mrand = getRandomInt(1,16)
+        const mrand = getRandomInt(1, 16)
         callMintFromSource(
           reduxState.keyringSourceAccount,
           reduxState.nodeApi,
@@ -350,19 +356,24 @@ function MusicPlayer() {
           0
         ).catch(console.error)
 
-        getTokensByOwnerTemp(reduxState.keyringSourceAccount.address, reduxState.nodeApi)
-          .then(results => {
-            const recentMint = results[results.length - 1]
-            if (recentMint) {
-              callTransferFromSource(
-                reduxState.keyringSourceAccount,
-                reduxState.nodeApi,
-                recentMint[0],
-                recentMint[1],
-                reduxState.keyringAccount
-              ).catch(console.error)
-            }
-          });
+        setTimeout(() => {
+          getTokensByOwnerTemp(reduxState.keyringSourceAccount.address, reduxState.nodeApi)
+            .then(results => {
+              console.log('ez results', results);
+              const recentMint = results[results.length - 1]
+              console.log('recent mint', recentMint);
+              if (recentMint) {
+                callTransferFromSource(
+                  reduxState.keyringSourceAccount,
+                  reduxState.nodeApi,
+                  recentMint[0],
+                  recentMint[1],
+                  reduxState.keyringAccount
+                ).catch(console.error)
+              }
+            });
+        }, 9000);
+
       }
     });
   };

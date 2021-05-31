@@ -152,8 +152,8 @@ function NFT() {
         api.query.nftModule.classes([]) // addr = account id
       ]);
 
-      console.log('token count', tokenClasses.value.total_issuance.words[0]);
-      const tokenCount = tokenClasses?.value?.total_issuance.words[0] || 0;
+      // console.log('token count', tokenClasses.value.total_issuance.words[0]);
+      const tokenCount = tokenClasses?.value?.total_issuance?.words[0] || 0;
 
       // query owner tokens, and push to userTokenCollection 
       let userTokenCollectionTemp = [];
