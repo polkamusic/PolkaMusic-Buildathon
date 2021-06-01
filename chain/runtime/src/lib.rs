@@ -277,6 +277,11 @@ impl pallet_nft::Trait for Runtime {
 	type TokenData = u32;
 }
 
+impl pallet_utility::Trait for Runtime {
+    type Event = Event;
+    type Call = Call;
+    type WeightInfo = ();
+}
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
@@ -296,6 +301,7 @@ construct_runtime!(
 		// Include the custom logic from the template pallet in the runtime.
 		PmNFTModule: pm_nft::{Module, Call, Storage, Event<T>},
 		NftModule: pallet_nft::{Module, Call, Storage},
+		Utility: pallet_utility::{Module, Call, Event},
 	}
 );
 
