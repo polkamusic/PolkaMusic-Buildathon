@@ -131,11 +131,19 @@ function Wallet(props) {
         size="lg"
         value={reduxState?.account || "Select Wallet"}
         onChange={(event) => {
-          console.log('on change wallet', event.target.value);
+          console.log('on change wallet', event.target[event.target.selectedIndex].text);
+          const addressDisplay = event.target[event.target.selectedIndex].text;
           dispatch({
             type: ACTIONS.SET_ACCOUNT,
             payload: {
               newAcct: event.target?.value || ""
+            }
+          });
+
+          dispatch({
+            type: ACTIONS.SET_ACCOUNT_DISPLAY,
+            payload: {
+              newAcctDisplay: addressDisplay || ""
             }
           });
 
@@ -153,6 +161,10 @@ function Wallet(props) {
 
         }}
       >
+        {
+          (reduxState && reduxState.account !== "") &&
+          (<option style={{ background: "black" }} value={reduxState.account}>{reduxState?.accountDisplay || 'Select Wallet'}</option>)
+        }
         {selectAddresses.length === 0
           && (<option style={{ background: "black" }} value="option1">Wallet not available</option>)
         }

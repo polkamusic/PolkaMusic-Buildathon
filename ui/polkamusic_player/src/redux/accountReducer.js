@@ -2,6 +2,7 @@ import { ACTIONS } from "./Actions";
 
 const initialState = {
   account: '',
+  accountDisplay: '',
   nodeApi: null,
   keyringAccounts: [],
   keyringAccount: null,
@@ -19,6 +20,15 @@ function accountReducer(state = initialState, action) {
       return {
         ...state,
         account: newAcct,
+      };
+    }
+
+    case ACTIONS.SET_ACCOUNT_DISPLAY: {
+      const { newAcctDisplay } = action.payload;
+
+      return {
+        ...state,
+        accountDisplay: newAcctDisplay,
       };
     }
     // other cases
