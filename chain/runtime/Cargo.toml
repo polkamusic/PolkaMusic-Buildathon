@@ -53,7 +53,8 @@ sp-runtime = { default-features = false, version = '2.0.0' }
 sp-session = { default-features = false, version = '2.0.0' }
 sp-std = { default-features = false, version = '2.0.0' }
 sp-transaction-pool = { default-features = false, version = '2.0.0' }
-sp-version = { default-features = false, version = '2.0.0' }
+sp-version = { default-features = false, version = '2.0.0' }    
+pallet-utility = { default-features = false, version = '2.0.0' }
 
 [features]
 default = ['std']
@@ -81,6 +82,7 @@ std = [
     'pallet-sudo/std',
     'pm-nft/std',
     'pallet-nft/std',
+    "pallet-utility/std",
     'pallet-timestamp/std',
     'pallet-transaction-payment/std',
     'pallet-transaction-payment-rpc-runtime-api/std',

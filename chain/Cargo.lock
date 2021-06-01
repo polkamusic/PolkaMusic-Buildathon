@@ -3284,6 +3284,7 @@ dependencies = [
  "pallet-timestamp",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-utility",
  "parity-scale-codec",
  "pm-nft",
  "serde",
@@ -3673,6 +3674,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-utility"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c4578a0a2133fb7c5ef5c55ef7d0fe8e0e7a4bd8cedee308ee97fa10903966d"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "parity-db"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4019,6 +4036,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "pallet-nft",
+ "pallet-utility",
  "parity-scale-codec",
  "sp-core",
  "sp-io",
