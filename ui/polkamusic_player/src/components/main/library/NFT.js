@@ -311,23 +311,6 @@ function NFT() {
       h="100vh"
     >
       <ToastContainer />
-      {/* <Box
-        w="30%"
-        height="30px"
-        d="flex"
-        alignItems="center"
-        justifyContent="center"
-        flexDir="column"
-        borderRadius="md"
-        p={3}
-        mb={3}
-        mr={2}
-      >
-        <Text fontSize="sm" color="gray.500" p={1}>
-          Puzzle Pieces : {nftTokens.join(", ") || ""}
-
-        </Text>
-      </Box> */}
       <Flex alignItems="center" justifyContent="center" direction="row" mb={8}>
         <NftPuzzle nftTokens={nftTokens} glowHeadphones={glowHeadphones} />
         <Box d="flex" flexDir="column" ml={3}>
@@ -345,7 +328,7 @@ function NFT() {
               Medium NFT &nbsp;{mediumNftTokens && (mediumNftTokens.length === 8) ? `${mediumNftCompleted ? 'Claimed' : 'Cleared'}!` : `${mediumNftTokens.length >= 8 ? '8' : mediumNftTokens.length}/8`}
             </Text>
             <Text fontSize="md" color="gray.100" p={2}>
-              Hard NFT  &nbsp; &nbsp; &nbsp; {hardNftTokens && (hardNftTokens.length) === 1 ? `${hardNftCompleted ? 'Claimed' : 'Cleared'}!` : `${hardNftTokens.length}/1`}
+              Hard NFT  &nbsp; &nbsp; &nbsp; {hardNftTokens && (hardNftTokens.length) === 1 ? `${hardNftCompleted ? 'Claimed' : 'Cleared'}!` : `${hardNftTokens.length >= 1 ? '1': '0'}/1`}
             </Text>
           </Box>
 

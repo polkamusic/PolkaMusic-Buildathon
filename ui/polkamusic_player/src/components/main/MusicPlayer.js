@@ -388,11 +388,11 @@ function MusicPlayer() {
     } else {
       audioRef.current.pause();
       console.log("Paused Now Data will be Send");
-      // sendData({
-      //   song_src: song_src,
-      //   duration: currentTime,
-      //   user_publickey: reduxState.account,
-      // });
+      sendData({
+        song_src: song_src,
+        duration: currentTime,
+        user_publickey: reduxState.account,
+      });
     }
   }, [isPlaying]);
 
