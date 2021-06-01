@@ -23,6 +23,7 @@ import { mediumTokensMap } from "../../../chainApis/mediumTokensMap";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import callBurnEasyNfts from '../../../chainApis/callBurnEasyNfts'
+import callMultiBurnNfts from "../../../chainApis/callMultiBurnNfts";
 
 function NFT() {
   const reduxState = useSelector((state) => state);
@@ -36,6 +37,7 @@ function NFT() {
   const [disableBurnHardButton, setDisableBurnHardButton] = useState(true)
   const [glowHeadphones, setGlowHeadphones] = useState(false)
   const [easyNftCompleted, setEasyNftCompleted] = useState(false)
+  const [mediumNftCompleted, setMediumNftCompleted] = useState(false)
   const [hardNftCompleted, setHardNftCompleted] = useState(false)
 
   const [easyTupleTokens, setEasyTupleTokens] = useState(null)
@@ -84,33 +86,48 @@ function NFT() {
               <Box>
                 <Button variant="ghost" onClick={() => {
                   setGlowHeadphones(true)
-                  // setEasyNftCompleted(true)
-                  setHardNftCompleted(true)
                   // burn nfts at node
-                  // const easyTupleTokensTemp = [[0, 3]]
+
+                  console.log('nfts to burn', tokenCategoryTupleMap);
+                  console.log('tokenCategory TupleMap to burn', tokenCategoryTupleMap);
+
+
                   if (!tokenCategoryTupleMap || !nftTokens) return
                   // get tokenCategory, filter nft tokens
                   let filteredNftTokens = []
                   if (tokenCategory === "Hard") {
                     filteredNftTokens = nftTokens.filter(nfttoken => nfttoken === "H")
-                  }
-                  if (tokenCategory === "Easy") {
-                    filteredNftTokens = nftTokens.filter(nfttoken => nfttoken.contains("E"))
+                    setHardNftCompleted(true)
+                    for (const nftToken of filteredNftTokens) {
+                      const tokenTuple = tokenCategoryTupleMap[nftToken]
+                      //callBurnEasyNfts(keyringBurnAccount, nodeApi, classID, tokenID, keyringAccount) 
+                      callBurnEasyNfts(
+                        reduxState.keyringBurnAccount,
+                        reduxState.nodeApi,
+                        tokenTuple[0],
+                        tokenTuple[1],
+                        reduxState.keyringAccount,
+                        notify
+                      ).catch((err) => {
+                        notify(err)
+                        return console.error
+                      })
+                    }
                   }
                   if (tokenCategory === "Medium") {
-                    filteredNftTokens = nftTokens.filter(nfttoken => nfttoken.contains("M"))
-                  }
-                  console.log('nfts to burn', tokenCategoryTupleMap);
-                  console.log('filtered nfts to burn', filteredNftTokens);
+                    filteredNftTokens = nftTokens.filter(nfttoken => nfttoken.includes("M"))
+                    setMediumNftCompleted(true)
 
-                  for (const nftToken of filteredNftTokens) {
-                    const tokenTuple = tokenCategoryTupleMap[nftToken]
-                    //callBurnEasyNfts(keyringBurnAccount, nodeApi, classID, tokenID, keyringAccount) 
-                    callBurnEasyNfts(
+                    let tokenTuplesToBurn = []
+                    for (const nftToken of filteredNftTokens) {
+                      const tokenTuple = tokenCategoryTupleMap[nftToken]
+                      tokenTuplesToBurn.push(tokenTuple)
+                    }
+                    // callMultiBurnNfts(keyringBurnAccount, nodeApi, tokenTuplesToBurn, keyringAccount, notify)
+                    callMultiBurnNfts(
                       reduxState.keyringBurnAccount,
                       reduxState.nodeApi,
-                      tokenTuple[0],
-                      tokenTuple[1],
+                      tokenTuplesToBurn,
                       reduxState.keyringAccount,
                       notify
                     ).catch((err) => {
@@ -118,6 +135,30 @@ function NFT() {
                       return console.error
                     })
                   }
+                  if (tokenCategory === "Easy") {
+                    filteredNftTokens = nftTokens.filter(nfttoken => nfttoken.includes("E"))
+                    setEasyNftCompleted(true)
+                    let tokenTuplesToBurn = []
+                    for (const nftToken of filteredNftTokens) {
+                      const tokenTuple = tokenCategoryTupleMap[nftToken]
+                      tokenTuplesToBurn.push(tokenTuple)
+                    }
+                    // callMultiBurnNfts(keyringBurnAccount, nodeApi, tokenTuplesToBurn, keyringAccount, notify)
+                    callMultiBurnNfts(
+                      reduxState.keyringBurnAccount,
+                      reduxState.nodeApi,
+                      tokenTuplesToBurn,
+                      reduxState.keyringAccount,
+                      notify
+                    ).catch((err) => {
+                      notify(err)
+                      return console.error
+                    })
+                  }
+
+      
+
+                 
                   // back to normal
                   setTimeout(() => {
                     setGlowHeadphones(false)
@@ -197,7 +238,7 @@ function NFT() {
         for (const utc of userTokCollect) {
           const nftdata = await api.query.nftModule.tokens(utc[0], utc[1])
           nftDataCollection.push(nftdata)
-          tokenCategoryTupleMap[u8aToString(nftdata.value.metadata)] = utc 
+          tokenCategoryTupleMap[u8aToString(nftdata.value.metadata)] = utc
         }
         console.log('nftDataCollection', nftDataCollection);
 
@@ -238,11 +279,11 @@ function NFT() {
               prevMedToken = token
             }
 
-            if (token === "H") { 
+            if (token === "H") {
               hcounter = true
               hardNftTokens.push(token)
             }
-           
+
           }
 
           console.log('ez counter', ezcounter);
@@ -250,7 +291,8 @@ function NFT() {
 
           console.log('h counter', hcounter);
 
-          ezcounter === 16 ? setDisableBurnEasyButton(false) : setDisableBurnEasyButton(true)
+          ezcounter >= 16 ? setDisableBurnEasyButton(false) : setDisableBurnEasyButton(true)
+          medcounter >= 8 ? setDisableBurnMediumButton(false) : setDisableBurnMediumButton(true)
           setDisableBurnHardButton(!hcounter)
           setEasyNftTokens(ezNftTokens)
           setMediumNftTokens(medNftTokens)
@@ -297,10 +339,10 @@ function NFT() {
             color="white"
           >
             <Text fontSize="md" color="gray.100" p={2}>
-              Easy NFT &nbsp; &nbsp; &nbsp; {easyNftTokens && (easyNftTokens.length === 16) ? `${easyNftCompleted ? 'Claimed' : 'Cleared'}!` : `${easyNftTokens.length}/16`}
+              Easy NFT &nbsp; &nbsp; &nbsp; {easyNftTokens && (easyNftTokens.length === 16) ? `${easyNftCompleted ? 'Claimed' : 'Cleared'}!` : `${easyNftTokens.length >= 16 ? '16' : easyNftTokens.length}/16`}
             </Text>
             <Text fontSize="md" color="gray.100" p={2}>
-              Medium NFT &nbsp;{mediumNftTokens && (mediumNftTokens.length === 8) ? " Cleared!" : `${mediumNftTokens.length}/8`}
+              Medium NFT &nbsp;{mediumNftTokens && (mediumNftTokens.length === 8) ? `${mediumNftCompleted ? 'Claimed' : 'Cleared'}!` : `${mediumNftTokens.length >= 8 ? '8' : mediumNftTokens.length}/8`}
             </Text>
             <Text fontSize="md" color="gray.100" p={2}>
               Hard NFT  &nbsp; &nbsp; &nbsp; {hardNftTokens && (hardNftTokens.length) === 1 ? `${hardNftCompleted ? 'Claimed' : 'Cleared'}!` : `${hardNftTokens.length}/1`}
@@ -313,14 +355,14 @@ function NFT() {
             tokenCategory="Easy"
             tokenCount={16}
           />
-          <ButtonModal 
-            value="Get a Concert Ticket" 
-            disableBurnButton={disableBurnMediumButton} 
+          <ButtonModal
+            value="Get a Concert Ticket"
+            disableBurnButton={disableBurnMediumButton}
             tokenCount={8}
             tokenCategory="Medium"
           />
-          <ButtonModal 
-            value="Get a BMW M5" 
+          <ButtonModal
+            value="Get a BMW M5"
             disableBurnButton={disableBurnHardButton}
             tokenCount={1}
             tokenCategory="Hard"
