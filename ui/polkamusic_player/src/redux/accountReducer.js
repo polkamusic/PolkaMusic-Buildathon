@@ -6,7 +6,8 @@ const initialState = {
   keyringAccounts: [],
   keyringAccount: null,
   keyringBurnAccount: null,
-  keyringSourceAccount: null
+  keyringSourceAccount: null,
+  trackIndex: { idx: 0, clicked: false }
 }
 
 function accountReducer(state = initialState, action) {
@@ -65,6 +66,16 @@ function accountReducer(state = initialState, action) {
         keyringSourceAccount: newKeyringSourceAccount,
       };
     }
+
+    case ACTIONS.SET_TRACK_INDEX: {
+      const { newTrackIndex } = action.payload;
+
+      return {
+        ...state,
+        trackIndex: { ...state.trackIndex, ...newTrackIndex },
+      };
+    }
+
   }
 }
 

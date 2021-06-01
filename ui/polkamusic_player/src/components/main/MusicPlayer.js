@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
+import tracks from "./tracks";
 import { Box, Button, Image, Text, Heading } from "@chakra-ui/react";
 import moment from "moment";
 import momentDurationFormatSetup from "moment-duration-format";
 import { motion, useDragControls, useMotionValue } from "framer-motion";
 import axios from "axios";
-import { stringToU8a, u8aToHex, stringToHex } from '@polkadot/util';
+import { stringToU8a, u8aToHex, stringToHex } from "@polkadot/util";
 import {
   FaPlay,
   FaPause,
@@ -13,132 +14,152 @@ import {
   FaVolumeUp,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import keyring from '@polkadot/ui-keyring';
-import { web3FromSource } from '@polkadot/extension-dapp';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-const { Keyring } = require('@polkadot/keyring');
+import keyring from "@polkadot/ui-keyring";
+import { web3FromSource } from "@polkadot/extension-dapp";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+const { Keyring } = require("@polkadot/keyring");
 
-const notify = (msg) => toast(`🦄 ${msg}`, {
-  position: "top-right",
-  autoClose: 5000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-  draggable: true,
-  progress: undefined,
-});
+const notify = (msg) =>
+  toast(`🦄 ${msg}`, {
+    position: "top-right",
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+  });
 
-
-async function callMintFromSource(keyringSourceAccount, nodeApi, tokenCategory = "token", tokenData = 0, classID = 0) {
+async function callMintFromSource(
+  keyringSourceAccount,
+  nodeApi,
+  tokenCategory = "token",
+  tokenData = 0,
+  classID = 0
+) {
   if (keyringSourceAccount && nodeApi) {
-
     // Constuct the keying after the API (crypto has an async init)
-    const keyRing = new Keyring({ type: 'sr25519' });
+    const keyRing = new Keyring({ type: "sr25519" });
 
     // Add Alice to our keyring with a hard-deived path (empty phrase, so uses dev)
-    const alice = keyRing.addFromUri('//Alice');
+    const alice = keyRing.addFromUri("//Alice");
 
     const sourceKrpair = keyring.getPair(keyringSourceAccount.address);
-    console.log('source Kr pair', sourceKrpair);
+    console.log("source Kr pair", sourceKrpair);
 
-    keyring.getAddresses().forEach(kra => {
+    keyring.getAddresses().forEach((kra) => {
       if (kra.address?.toString() === sourceKrpair.address?.toString()) {
-        console.log('Keyring source address already saved...');
+        console.log("Keyring source address already saved...");
       } else {
-        keyring.saveAddress(sourceKrpair.address, { name: sourceKrpair.meta.name });
+        keyring.saveAddress(sourceKrpair.address, {
+          name: sourceKrpair.meta.name,
+        });
       }
     });
 
-    const nftMint = nodeApi.tx.pmNftModule
-      .mintNftToken(
-        classID,
-        tokenCategory,
-        tokenData
-      );
+    const nftMint = nodeApi.tx.pmNftModule.mintNftToken(
+      classID,
+      tokenCategory,
+      tokenData
+    );
 
     const tx = await nftMint.signAndSend(alice, { nonce: -1 });
-    notify(`NFT ${tokenCategory} minted with hash ${tx}`)
-    console.log((`NFT ${tokenCategory} minted with hash ${tx}`));
+    notify(`NFT ${tokenCategory} minted with hash ${tx}`);
+    console.log(`NFT ${tokenCategory} minted with hash ${tx}`);
   }
 }
 
 async function getTokensByOwnerTemp(addr, api) {
   if (!api || !addr) {
-    console.log('api or address is missing')
-    return
+    console.log("api or address is missing");
+    return;
   }
 
   // token count by class id
-  const [tokenClasses] = await Promise.all([
-    api.query.nftModule.classes([])
-  ]);
+  const [tokenClasses] = await Promise.all([api.query.nftModule.classes([])]);
 
   // console.log('token count', tokenClasses.value.total_issuance.words[0]);
   const tokenCount = tokenClasses?.value?.total_issuance?.words[0] || 0;
 
-  // query owner tokens, and push to sourceTokenCollection 
+  // query owner tokens, and push to sourceTokenCollection
   let sourceTokenCollectionTemp = [];
   let tokenCountAry = [];
-  console.log('tokenCount', tokenCount);
-  for (let t = 0; t <= tokenCount; t++) { tokenCountAry.push(t) }
-  console.log('token count array', tokenCountAry);
+  console.log("tokenCount", tokenCount);
+  for (let t = 0; t <= tokenCount; t++) {
+    tokenCountAry.push(t);
+  }
+  console.log("token count array", tokenCountAry);
   for (const tokencount of tokenCountAry) {
-    const usertoken = await api.query.nftModule.tokensByOwner(addr, [0, tokencount])
-    sourceTokenCollectionTemp.push(usertoken)
+    const usertoken = await api.query.nftModule.tokensByOwner(addr, [
+      0,
+      tokencount,
+    ]);
+    sourceTokenCollectionTemp.push(usertoken);
   }
 
   // console.log('sourceTokenCollection temp', sourceTokenCollectionTemp);
-  const sourceTokenCollectionHasValue = sourceTokenCollectionTemp.filter(utcol => !utcol.value.isEmpty)
-  console.log('sourceTokenCollection has values', sourceTokenCollectionHasValue);
+  const sourceTokenCollectionHasValue = sourceTokenCollectionTemp.filter(
+    (utcol) => !utcol.value.isEmpty
+  );
+  console.log(
+    "sourceTokenCollection has values",
+    sourceTokenCollectionHasValue
+  );
 
-  const sourceTokenCollection = sourceTokenCollectionHasValue.map(utcol => {
-    return [utcol.value[0].words[0], utcol.value[1].words[0]]
+  const sourceTokenCollection = sourceTokenCollectionHasValue.map((utcol) => {
+    return [utcol.value[0].words[0], utcol.value[1].words[0]];
+  });
+  console.log("source Token Collection", sourceTokenCollection);
 
-  })
-  console.log('source Token Collection', sourceTokenCollection);
-
-  return sourceTokenCollection
+  return sourceTokenCollection;
 }
 
-async function callTransferFromSource(keyringSourceAccount, nodeApi, classID, tokenID, keyringAccount) {
+async function callTransferFromSource(
+  keyringSourceAccount,
+  nodeApi,
+  classID,
+  tokenID,
+  keyringAccount
+) {
   if (keyringSourceAccount && nodeApi && keyringAccount) {
-
     // Constuct the keying after the API (crypto has an async init)
-    const keyRing = new Keyring({ type: 'sr25519' });
+    const keyRing = new Keyring({ type: "sr25519" });
 
     // Add Alice to our keyring with a hard-deived path (empty phrase, so uses dev)
-    const alice = keyRing.addFromUri('//Alice');
+    const alice = keyRing.addFromUri("//Alice");
 
     const krpair = keyring.getPair(keyringAccount.address);
-    console.log('krpair', krpair);
+    console.log("krpair", krpair);
     const sourceKrpair = keyring.getPair(keyringSourceAccount.address);
-    console.log('source Kr pair', sourceKrpair);
+    console.log("source Kr pair", sourceKrpair);
 
-    keyring.getAddresses().forEach(kra => {
+    keyring.getAddresses().forEach((kra) => {
       if (kra.address?.toString() === krpair.address?.toString()) {
-        console.log('Keyring address already saved...');
+        console.log("Keyring address already saved...");
       } else {
         keyring.saveAddress(krpair.address, { name: krpair.meta.name });
       }
     });
-    keyring.getAddresses().forEach(kra => {
+    keyring.getAddresses().forEach((kra) => {
       if (kra.address?.toString() === sourceKrpair.address?.toString()) {
-        console.log('Keyring sourceaddress already saved...');
+        console.log("Keyring sourceaddress already saved...");
       } else {
-        keyring.saveAddress(sourceKrpair.address, { name: sourceKrpair.meta.name });
+        keyring.saveAddress(sourceKrpair.address, {
+          name: sourceKrpair.meta.name,
+        });
       }
     });
 
     // signer is from Polkadot-js browser extension
     const {
       address,
-      meta: { source, isInjected }
+      meta: { source, isInjected },
     } = krpair;
     let fromAcct;
 
     if (isInjected) {
-      console.log('is injected', isInjected);
+      console.log("is injected", isInjected);
       const injected = await web3FromSource(source);
       fromAcct = address;
       // nodeApi.setSigner(injected.signer); // signature by alice
@@ -146,81 +167,19 @@ async function callTransferFromSource(keyringSourceAccount, nodeApi, classID, to
       fromAcct = krpair;
     }
 
-
     console.log(typeof classID, typeof tokenID);
     console.log(classID, tokenID);
-    const nft_transfer = nodeApi.tx.pmNftModule
-      .nftTransfer(
-        krpair.address,
-        classID,
-        tokenID
-      );
+    const nft_transfer = nodeApi.tx.pmNftModule.nftTransfer(
+      krpair.address,
+      classID,
+      tokenID
+    );
 
     const tx = await nft_transfer.signAndSend(alice, { nonce: -1 });
-    notify(`NFT transferred with hash ${tx}`)
-    console.log((`NFT transferred with hash ${tx}`));
+    notify(`NFT transferred with hash ${tx}`);
+    console.log(`NFT transferred with hash ${tx}`);
   }
 }
-
-//Example Data
-const tracks = [
-  {
-    song_src: "1",
-    title: "Hope",
-    artist: "Benny Blaco",
-    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    image: "https://via.placeholder.com/200/0000FF",
-    color: "#3b609c",
-  },
-  {
-    song_src: "2",
-    title: "Today",
-    artist: "Justin Beiber",
-    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-    image: "https://via.placeholder.com/200",
-    color: "#3b609c",
-  },
-  {
-    song_src: "3",
-    title: "Dance",
-    artist: "The ChainSmokers",
-    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-    image: "https://via.placeholder.com/200",
-    color: "#3b609c",
-  },
-  {
-    song_src: "4",
-    title: "Memories",
-    artist: "Maroon 5",
-    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
-    image: "https://via.placeholder.com/200",
-    color: "#3b609c",
-  },
-  {
-    song_src: "4",
-    title: "Memories",
-    artist: "Maroon 5",
-    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
-    image: "https://via.placeholder.com/200",
-    color: "#3b609c",
-  },
-  {
-    song_src: "4",
-    title: "Memories",
-    artist: "Maroon 5",
-    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3",
-    image: "https://via.placeholder.com/200",
-    color: "#3b609c",
-  },
-  {
-    song_src: "4",
-    title: "Memories",
-    artist: "Maroon 5",
-    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3",
-    image: "https://via.placeholder.com/200",
-    color: "#3b609c",
-  },
-];
 
 const MotionBox = motion(Box);
 
@@ -231,9 +190,8 @@ function MusicPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [clickedTime, setClickedTime] = useState();
   const [musicVolume, setMusicVolume] = useState(0.5);
-  const [Dragbg, setDragbg] = useState(100);
-  const [sourceLastMindtedTuple, setSourceLastMindtedTuple] = useState(null)
-  const [sourceTupleTokens, setSourceTupleTokens] = useState(null)
+  const [sourceLastMindtedTuple, setSourceLastMindtedTuple] = useState(null);
+  const [sourceTupleTokens, setSourceTupleTokens] = useState(null);
   // const [xState, setXState] = useState(0);
   // const reduxState.account = useSelector((state) => {
   //   return state?.account || "";
@@ -242,7 +200,7 @@ function MusicPlayer() {
   const x = useMotionValue(0);
 
   // Destructure for conciseness
-  const { title, artist, color, image, audioSrc, song_src } =
+  const { title, artist, color, image, audioSrc, song_src } = 
     tracks[trackIndex];
 
   const initialValues = {
@@ -267,8 +225,8 @@ function MusicPlayer() {
   // const curPercentage = (currentTime / duration) * 100;
 
   useEffect(() => {
-    console.log('current time', currentTime);
-    console.log('duration', duration);
+    console.log("current time", currentTime);
+    console.log("duration", duration);
     if (isNaN(currentTime) || isNaN(duration)) return;
     const curPercentage = (currentTime / duration) * 100;
     console.log("current percentage", curPercentage);
@@ -276,106 +234,110 @@ function MusicPlayer() {
     console.log("scale res", scaleRes);
     // setXState(scaleRes);
     x.set(scaleRes);
-    console.log("THis is the get method below");
     x.get();
   }, [currentTime, duration]);
 
   const getRandomInt = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
+  };
 
   const sendData = (values) => {
     axios.post("http://localhost:5000/api/reports", values).then((res) => {
-      console.log('reports data', res.data);
-
-      if (currentTime > 30.0) {
-        callMintFromSource(
-          reduxState.keyringSourceAccount,
-          reduxState.nodeApi,
-          "H",
-          0,
-          0
-        ).catch(console.error)
-
-        setTimeout(() => {
-          getTokensByOwnerTemp(reduxState.keyringSourceAccount.address, reduxState.nodeApi)
-            .then(results => {
-              const recentMint = results[results.length - 1]
-              if (recentMint) {
-                callTransferFromSource(
-                  reduxState.keyringSourceAccount,
-                  reduxState.nodeApi,
-                  recentMint[0],
-                  recentMint[1],
-                  reduxState.keyringAccount
-                ).catch(console.error)
-              }
-            });
-        }, 9000);
-      }
-
-      // medium nft mint
-      if (currentTime > 20.0 && currentTime <= 30.0) {
-        // random 1 - 8
-        const mrand = getRandomInt(1, 8)
-        callMintFromSource(
-          reduxState.keyringSourceAccount,
-          reduxState.nodeApi,
-          `M${mrand}`,
-          0,
-          0
-        ).catch(console.error)
-
-        setTimeout(() => {
-          getTokensByOwnerTemp(reduxState.keyringSourceAccount.address, reduxState.nodeApi)
-            .then(results => {
-              console.log('medium results', results);
-              const recentMint = results[results.length - 1]
-              if (recentMint) {
-                callTransferFromSource(
-                  reduxState.keyringSourceAccount,
-                  reduxState.nodeApi,
-                  recentMint[0],
-                  recentMint[1],
-                  reduxState.keyringAccount
-                ).catch(console.error)
-              }
-            });
-        }, 9000);
-      }
-
-      // easy nft mint
-      if (currentTime > 10.0 && currentTime <= 20.0) {
-        // random 1 - 16
-        const mrand = getRandomInt(1, 16)
-        callMintFromSource(
-          reduxState.keyringSourceAccount,
-          reduxState.nodeApi,
-          `E${mrand}`,
-          0,
-          0
-        ).catch(console.error)
-
-        setTimeout(() => {
-          getTokensByOwnerTemp(reduxState.keyringSourceAccount.address, reduxState.nodeApi)
-            .then(results => {
-              console.log('ez results', results);
-              const recentMint = results[results.length - 1]
-              console.log('recent mint', recentMint);
-              if (recentMint) {
-                callTransferFromSource(
-                  reduxState.keyringSourceAccount,
-                  reduxState.nodeApi,
-                  recentMint[0],
-                  recentMint[1],
-                  reduxState.keyringAccount
-                ).catch(console.error)
-              }
-            });
-        }, 9000);
-
-      }
+      console.log("reports data", res.data);
     });
+
+    if (currentTime > 30.0) {
+      callMintFromSource(
+        reduxState.keyringSourceAccount,
+        reduxState.nodeApi,
+        "H",
+        0,
+        0
+      ).catch(console.error);
+
+      setTimeout(() => {
+        getTokensByOwnerTemp(
+          reduxState.keyringSourceAccount.address,
+          reduxState.nodeApi
+        ).then((results) => {
+          const recentMint = results[results.length - 1];
+          if (recentMint) {
+            callTransferFromSource(
+              reduxState.keyringSourceAccount,
+              reduxState.nodeApi,
+              recentMint[0],
+              recentMint[1],
+              reduxState.keyringAccount
+            ).catch(console.error);
+          }
+        });
+      }, 9000);
+    }
+
+    // medium nft mint
+    if (currentTime > 20.0 && currentTime <= 30.0) {
+      // random 1 - 8
+      const mrand = getRandomInt(1, 8);
+      callMintFromSource(
+        reduxState.keyringSourceAccount,
+        reduxState.nodeApi,
+        `M${mrand}`,
+        0,
+        0
+      ).catch(console.error);
+
+      setTimeout(() => {
+        getTokensByOwnerTemp(
+          reduxState.keyringSourceAccount.address,
+          reduxState.nodeApi
+        ).then((results) => {
+          console.log("medium results", results);
+          const recentMint = results[results.length - 1];
+          if (recentMint) {
+            callTransferFromSource(
+              reduxState.keyringSourceAccount,
+              reduxState.nodeApi,
+              recentMint[0],
+              recentMint[1],
+              reduxState.keyringAccount
+            ).catch(console.error);
+          }
+        });
+      }, 9000);
+    }
+
+    // easy nft mint
+    if (currentTime > 10.0 && currentTime <= 20.0) {
+      // random 1 - 16
+      const mrand = getRandomInt(1, 16);
+      callMintFromSource(
+        reduxState.keyringSourceAccount,
+        reduxState.nodeApi,
+        `E${mrand}`,
+        0,
+        0
+      ).catch(console.error);
+
+      setTimeout(() => {
+        getTokensByOwnerTemp(
+          reduxState.keyringSourceAccount.address,
+          reduxState.nodeApi
+        ).then((results) => {
+          console.log("ez results", results);
+          const recentMint = results[results.length - 1];
+          console.log("recent mint", recentMint);
+          if (recentMint) {
+            callTransferFromSource(
+              reduxState.keyringSourceAccount,
+              reduxState.nodeApi,
+              recentMint[0],
+              recentMint[1],
+              reduxState.keyringAccount
+            ).catch(console.error);
+          }
+        });
+      }, 9000);
+    }
   };
 
   function formatDuration(duration) {
@@ -434,6 +396,14 @@ function MusicPlayer() {
     }
   }, [isPlaying]);
 
+  useEffect(() => {
+    console.log('track idx state n play', reduxState.trackIndex);
+    if (reduxState && reduxState.trackIndex && reduxState.trackIndex.clicked) {
+      setIsPlaying(true)
+    }
+   
+  }, [reduxState.trackIndex])
+
   const handleVol = (e) => {
     e.preventDefault();
     setMusicVolume((prev) => prev + 0.2);
@@ -449,7 +419,6 @@ function MusicPlayer() {
     return () => {
       audioRef.current.pause();
       clearInterval(intervalRef.current);
-      setDragbg(0);
     };
   }, []);
 
@@ -556,7 +525,7 @@ function MusicPlayer() {
             <FaCaretRight />
           </Button>
         </Box>
-        <MotionBox d="flex" alignItems="center" bg="gray.500" h="0.5" w="800px">
+        {/* <MotionBox d="flex" alignItems="center" bg="gray.500" h="0.5" w="800px">
           <MotionBox
             style={{ x }}
             w="1rem"
@@ -570,15 +539,24 @@ function MusicPlayer() {
             dragMomentum={false}
             onDrag={handleDrag}
           ></MotionBox>
-        </MotionBox>
-        <Box color="white">{dur}</Box>
+        </MotionBox> */}
         <Box
           mr={4}
+          d="flex"
+          alignItems="center"
+          justifyContent="center"
+          flexDir="column"
           color="white"
           onClick={handleVol}
           _hover={{ color: "pink.500" }}
         >
-          <FaVolumeUp />
+          <Box color="white" mr={1}>
+            Current Duration: {cur}
+          </Box>
+          <Box color="white" ml={2}>
+            Total Duration: {dur}
+          </Box>
+          {/* <FaVolumeUp /> */}
         </Box>
       </Box>
     </>

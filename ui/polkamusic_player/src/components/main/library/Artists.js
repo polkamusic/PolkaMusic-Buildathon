@@ -9,10 +9,13 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import Wallet from "../Wallet";
-
+import { useDispatch, useSelector } from "react-redux";
+import { ACTIONS } from "../../../redux/Actions";
+import "./artist.css"
 
 function Artists(props) {
   // const [keyringAccts, setKeyringAccts] = useState(null);
+  const dispatch = useDispatch();
 
   return (
     <Box h="100vh" backgroundColor="blackAlpha.900" width="100%">
@@ -33,7 +36,15 @@ function Artists(props) {
         <Wallet keyringAccts={props.keyringAccts} nodeApi={props.nodeApi} />
       </Box>
       <HStack mx={32} spacing="24px">
-        <Box width="200px" borderRadius="xl" background="blue.900">
+        <Box width="200px" borderRadius="xl" background="blue.900" className="cover-hover"
+          onClick={() => {
+            dispatch({
+              type: ACTIONS.SET_TRACK_INDEX,
+              payload: {
+                newTrackIndex: { idx: 1, clicked: true }
+              }
+            })
+          }}>
           <Image
             // src="https://via.placeholder.com/200"
             src="https://upload.wikimedia.org/wikipedia/en/d/d1/Rihanna_-_Loud.png"
@@ -55,7 +66,16 @@ function Artists(props) {
             Consideration
           </Text>
         </Box>
-        <Box width="200px" borderRadius="xl" background="purple.700">
+        <Box width="200px" borderRadius="xl" background="purple.700" className="cover-hover"
+          onClick={() => {
+            dispatch({
+              type: ACTIONS.SET_TRACK_INDEX,
+              payload: {
+                newTrackIndex: { idx: 1, clicked: true }
+              }
+            })
+          }}
+        >
           <Image
             src="https://i.pinimg.com/originals/3f/9b/1a/3f9b1ab0095226f5af5f5720e1a49acd.jpg"
             alt="Rihana"
@@ -76,7 +96,15 @@ function Artists(props) {
             Beautiful
           </Text>
         </Box>
-        <Box width="200px" borderRadius="xl" background="pink.900">
+        <Box width="200px" borderRadius="xl" background="pink.900" className="cover-hover"
+          onClick={() => {
+            dispatch({
+              type: ACTIONS.SET_TRACK_INDEX,
+              payload: {
+                newTrackIndex: { idx: 1, clicked: true }
+              }
+            })
+          }}>
           <Image
             src="https://i.pinimg.com/originals/7c/70/60/7c706032eb0b13161d9d3f1a6b9063d7.jpg"
             alt="Rihana"
@@ -97,7 +125,16 @@ function Artists(props) {
             Best Day
           </Text>
         </Box>
-        <Box width="200px" borderRadius="xl" background="cyan.900">
+        <Box width="200px" borderRadius="xl" background="cyan.900" className="cover-hover"
+          onClick={() => {
+            dispatch({
+              type: ACTIONS.SET_TRACK_INDEX,
+              payload: {
+                newTrackIndex: { idx: 1, clicked: true }
+              }
+            })
+          }}
+        >
           <Image
             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdH9GHSeXi6zKfVNUYi8TPmOZ-1LbHzFzIRg&usqp=CAU"
             alt="Rihana"
