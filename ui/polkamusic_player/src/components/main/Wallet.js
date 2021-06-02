@@ -48,6 +48,13 @@ function Wallet(props) {
         }
       });
 
+      dispatch({
+        type: ACTIONS.SET_ACCOUNT_DISPLAY,
+        payload: {
+          newAcctDisplay: walletAccounts[0].meta.name || ""
+        }
+      });
+
       // find keyring account, set to keyring account state
       // for future use e.g. adding to keyring addresses, etc
       if (reduxState.keyringAccounts && initialAddr) {

@@ -88,8 +88,8 @@ function NFT() {
                   setGlowHeadphones(true)
                   // burn nfts at node
 
-                  console.log('nfts to burn', tokenCategoryTupleMap);
-                  console.log('tokenCategory TupleMap to burn', tokenCategoryTupleMap);
+                  console.log('nft-nfts to burn', tokenCategoryTupleMap);
+                  console.log('nft-tokenCategory TupleMap to burn', tokenCategoryTupleMap);
 
 
                   if (!tokenCategoryTupleMap || !nftTokens) return
@@ -123,6 +123,7 @@ function NFT() {
                       const tokenTuple = tokenCategoryTupleMap[nftToken]
                       tokenTuplesToBurn.push(tokenTuple)
                     }
+                    console.log('nft-tokenTuplesToBurn', tokenTuplesToBurn);
                     // callMultiBurnNfts(keyringBurnAccount, nodeApi, tokenTuplesToBurn, keyringAccount, notify)
                     callMultiBurnNfts(
                       reduxState.keyringBurnAccount,
@@ -143,6 +144,8 @@ function NFT() {
                       const tokenTuple = tokenCategoryTupleMap[nftToken]
                       tokenTuplesToBurn.push(tokenTuple)
                     }
+                    console.log('nft-tokenTuplesToBurn', tokenTuplesToBurn);
+
                     // callMultiBurnNfts(keyringBurnAccount, nodeApi, tokenTuplesToBurn, keyringAccount, notify)
                     callMultiBurnNfts(
                       reduxState.keyringBurnAccount,
@@ -179,14 +182,14 @@ function NFT() {
     let userTokens;
     async function getTokensByOwnerTemp(addr, api, getUserTokens) {
       if (!api || !addr) {
-        console.log('api or address is missing')
+        console.log('nft-api or address is missing')
         return
       }
 
       const [userTokensOwner] = await Promise.all([
         api.query.nftModule.tokensByOwner(addr, []) // addr = account id
       ]);
-      console.log('userTokensOwner', userTokensOwner);
+      console.log('nft-userTokensOwner', userTokensOwner);
 
       // token count by class id
       const [tokenClasses] = await Promise.all([
@@ -200,7 +203,7 @@ function NFT() {
       let userTokenCollectionTemp = [];
       let tokenCountAry = [];
       for (let t = 0; t < tokenCount; t++) { tokenCountAry.push(t) }
-      console.log('token count array', tokenCountAry);
+      console.log('nft-token count array', tokenCountAry);
       for (const tokencount of tokenCountAry) {
         const usertoken = await api.query.nftModule.tokensByOwner(addr, [0, tokencount])
         userTokenCollectionTemp.push(usertoken)
@@ -208,26 +211,27 @@ function NFT() {
 
       // console.log('userTokenCollection temp', userTokenCollectionTemp);
       const userTokenCollectionHasValue = userTokenCollectionTemp.filter(utcol => !utcol.value.isEmpty)
-      console.log('userTokenCollection has values', userTokenCollectionHasValue);
+      console.log('nft-userTokenCollection has values', userTokenCollectionHasValue);
 
       const userTokenCollection = userTokenCollectionHasValue.map(utcol => {
         return [utcol.value[0].words[0], utcol.value[1].words[0]]
 
       })
-      console.log('userTokenCollection', userTokenCollection);
+      console.log('nft-userTokenCollection', userTokenCollection);
 
       setEasyTupleTokens(userTokenCollection)
       return userTokenCollection
     }
     getTokensByOwnerTemp(reduxState.account, reduxState.nodeApi)
       .then(results => {
-        console.log('user token id/s', results);
+        console.log('nft-user token id/s', results);
         setUserTokenIDs(results)
       });
 
-  }, [reduxState.account, reduxState.nodeApi])
+  }, [reduxState?.account, reduxState?.nodeApi])
 
   useEffect(() => {
+    console.log('nft page area logs');
     console.log('user token ids', userTokenIDs);
     if (userTokenIDs) {
 
@@ -250,7 +254,7 @@ function NFT() {
         return nftDataCollectionFormated
       }
 
-      getTokens(userTokenIDs, reduxState.nodeApi)
+      getTokens(userTokenIDs, reduxState?.nodeApi)
         .then(results => {
           console.log('nft tokens', results);
           if (results) setNftTokens(results)
@@ -300,7 +304,7 @@ function NFT() {
         })
     }
 
-  }, [reduxState.account, reduxState.nodeApi, userTokenIDs])
+  }, [reduxState?.account, reduxState?.nodeApi, userTokenIDs])
 
   return (
     <Flex
