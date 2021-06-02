@@ -12,11 +12,13 @@ import {
 } from '@polkadot/util';
 const { Keyring } = require("@polkadot/keyring");
 
+
 function App(props) {
   const dispatch = useDispatch();
 
-  // use redux to store node api
-  connectToChain('ws://127.0.0.1:9944', (chainApi) => {
+  // use redux to store node api, e.g. local 'ws://127.0.0.1:9944'
+  // bob's node, wss://polkamusic.in/bob
+  connectToChain('wss://polkamusic.in/alice', (chainApi) => {
     console.log('node api', chainApi);
     // store node api ,redux
     dispatch({
@@ -24,7 +26,7 @@ function App(props) {
       payload: {
         newNodeApi: chainApi
       }
-    });
+    })
 
 
     async function setInitNftClass(api) {
@@ -85,7 +87,7 @@ function App(props) {
   return (
     <Router>
       <ChakraProvider>
-        <Main />
+          <Main />
       </ChakraProvider>
     </Router>
   );
