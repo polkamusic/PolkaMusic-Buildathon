@@ -48,6 +48,7 @@ decl_event!(
 		NftClassCreated(AccountId, ClassId),
 		NftTokenMinted(AccountId, TokenId),
 		NftTokenTransferred(AccountId, AccountId, ClassId, TokenId),
+		NftTokenBurned(AccountId, ClassId, TokenId),
 	}
 );
 
@@ -106,6 +107,17 @@ decl_module! {
 			let to: T::AccountId = T::Lookup::lookup(dest)?;
 			let _r = pallet_nft::Module::<T>::transfer(&who, &to, (token_class_id, token_id));
 			Self::deposit_event(RawEvent::NftTokenTransferred(who, to, token_class_id, token_id));
+			Ok(())
+		}
+
+		#[weight = 10_000 + T::DbWeight::get().reads_writes(1,1)]
+		pub fn nft_burn(origin,  
+			token_class_id: T::ClassId, 
+			token_id: T::TokenId
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			let _r = pallet_nft::Module::<T>::burn(&who, (token_class_id, token_id));
+			Self::deposit_event(RawEvent::NftTokenBurned(who, token_class_id, token_id));
 			Ok(())
 		}
 	}
