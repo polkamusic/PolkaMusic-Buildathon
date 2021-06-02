@@ -5,7 +5,9 @@ import moment from "moment";
 import momentDurationFormatSetup from "moment-duration-format";
 import { motion, useDragControls, useMotionValue } from "framer-motion";
 import axios from "axios";
+import { u8aToString } from "@polkadot/util";
 import { stringToU8a, u8aToHex, stringToHex } from "@polkadot/util";
+import LoadingOverlay from 'react-loading-overlay';
 import {
   FaPlay,
   FaPause,
@@ -18,6 +20,7 @@ import keyring from "@polkadot/ui-keyring";
 import { web3FromSource } from "@polkadot/extension-dapp";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ACTIONS } from "../../redux/Actions";
 const { Keyring } = require("@polkadot/keyring");
 
 const notify = (msg) =>
@@ -46,11 +49,11 @@ async function callMintFromSource(
     const alice = keyRing.addFromUri("//Alice");
 
     const sourceKrpair = keyring.getPair(keyringSourceAccount.address);
-    console.log("source Kr pair", sourceKrpair);
+    console.log("mp-source Kr pair", sourceKrpair);
 
     keyring.getAddresses().forEach((kra) => {
       if (kra.address?.toString() === sourceKrpair.address?.toString()) {
-        console.log("Keyring source address already saved...");
+        console.log("mp-Keyring source address already saved...");
       } else {
         keyring.saveAddress(sourceKrpair.address, {
           name: sourceKrpair.meta.name,
@@ -70,7 +73,8 @@ async function callMintFromSource(
   }
 }
 
-async function getTokensByOwnerTemp(addr, api) {
+// source's or validator's (alice) tokens
+async function getTokensBySource(addr, api) {
   if (!api || !addr) {
     console.log("api or address is missing");
     return;
@@ -82,7 +86,7 @@ async function getTokensByOwnerTemp(addr, api) {
   // console.log('token count', tokenClasses.value.total_issuance.words[0]);
   const tokenCount = tokenClasses?.value?.total_issuance?.words[0] || 0;
 
-  // query owner tokens, and push to sourceTokenCollection
+  // query source tokens, and push to sourceTokenCollection
   let sourceTokenCollectionTemp = [];
   let tokenCountAry = [];
   console.log("tokenCount", tokenCount);
@@ -186,21 +190,28 @@ const MotionBox = motion(Box);
 function MusicPlayer() {
   const reduxState = useSelector((state) => state);
   const [trackIndex, setTrackIndex] = useState(0);
+  const [curTime, setCurTime] = useState("00:00");
   const [trackProgress, setTrackProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [clickedTime, setClickedTime] = useState();
   const [musicVolume, setMusicVolume] = useState(0.5);
   const [sourceLastMindtedTuple, setSourceLastMindtedTuple] = useState(null);
   const [sourceTupleTokens, setSourceTupleTokens] = useState(null);
+  const [userTokenCategories, setUserTokenCategories] = useState(null);
+  const [mintAndTransfer, setMintAndTransfer] = useState("");
+  const [playBtnDisable, setPlayBtnDisable] = useState(false);
+  const [mintAndTransferDone, setMintAndTransferDone] = useState(null);
+  const [isLoading, setIsLoading] = useState(false)
   // const [xState, setXState] = useState(0);
   // const reduxState.account = useSelector((state) => {
   //   return state?.account || "";
   // });
 
   const x = useMotionValue(0);
+  const dispatch = useDispatch();
 
   // Destructure for conciseness
-  const { title, artist, color, image, audioSrc, song_src } = 
+  const { title, artist, color, image, audioSrc, song_src } =
     tracks[trackIndex];
 
   const initialValues = {
@@ -225,7 +236,70 @@ function MusicPlayer() {
   // const curPercentage = (currentTime / duration) * 100;
 
   useEffect(() => {
-    console.log("current time", currentTime);
+    console.log("mint transfer and done val", mintAndTransferDone);
+    if (!reduxState || !reduxState.nodeApi || !reduxState.account) {
+      console.log("api or user account is missing");
+      return;
+    }
+    // user's token for token category mint metadata
+    async function getTokensByOwner() {
+      // token count by class id
+      const [tokenClasses] = await Promise.all([
+        reduxState.nodeApi.query.nftModule.classes([]),
+      ]);
+
+      // console.log('token count', tokenClasses.value.total_issuance.words[0]);
+      const tokenCount = tokenClasses?.value?.total_issuance?.words[0] || 0;
+
+      // query source tokens, and push to sourceTokenCollection
+      let userTokenTuplesTemp = [];
+      let tokenCountAry = [];
+      console.log("mp-music player-area-mint-transfer");
+      console.log("mp-tokenCount", tokenCount);
+      for (let t = 0; t <= tokenCount; t++) {
+        tokenCountAry.push(t);
+      }
+      console.log("mp-token count array", tokenCountAry);
+      for (const tokencount of tokenCountAry) {
+        const usertoken =
+          await reduxState.nodeApi.query.nftModule.tokensByOwner(
+            reduxState.account,
+            [0, tokencount]
+          );
+        userTokenTuplesTemp.push(usertoken);
+      }
+
+      // get all with value
+      const userTokenCatHasValue = userTokenTuplesTemp.filter(
+        (uttt) => !uttt.value.isEmpty
+      );
+      console.log("mp-userTokenCatHasValue has values", userTokenCatHasValue);
+
+      const userTokenTuples = userTokenCatHasValue.map((uttt) => {
+        return [uttt.value[0].words[0], uttt.value[1].words[0]];
+      });
+      console.log("user Token tuples", userTokenTuples);
+
+      let userTokenCat = [];
+      for (const utt of userTokenTuples) {
+        const nftdata = await reduxState.nodeApi.query.nftModule.tokens(
+          utt[0],
+          utt[1]
+        );
+        // userTokenCategoryTupleMap[u8aToString(nftdata.value.metadata)] = utt
+        userTokenCat.push(u8aToString(nftdata.value.metadata));
+      }
+
+      console.log("mp-userToken-Categories", userTokenCat);
+
+      setUserTokenCategories(userTokenCat);
+    }
+
+    getTokensByOwner();
+  }, [reduxState?.nodeApi, reduxState?.account, mintAndTransferDone]);
+
+  useEffect(() => {
+    setCurTime(formatDuration(currentTime));
     console.log("duration", duration);
     if (isNaN(currentTime) || isNaN(duration)) return;
     const curPercentage = (currentTime / duration) * 100;
@@ -245,99 +319,7 @@ function MusicPlayer() {
     axios.post("http://localhost:5000/api/reports", values).then((res) => {
       console.log("reports data", res.data);
     });
-
-    if (currentTime > 30.0) {
-      callMintFromSource(
-        reduxState.keyringSourceAccount,
-        reduxState.nodeApi,
-        "H",
-        0,
-        0
-      ).catch(console.error);
-
-      setTimeout(() => {
-        getTokensByOwnerTemp(
-          reduxState.keyringSourceAccount.address,
-          reduxState.nodeApi
-        ).then((results) => {
-          const recentMint = results[results.length - 1];
-          if (recentMint) {
-            callTransferFromSource(
-              reduxState.keyringSourceAccount,
-              reduxState.nodeApi,
-              recentMint[0],
-              recentMint[1],
-              reduxState.keyringAccount
-            ).catch(console.error);
-          }
-        });
-      }, 9000);
-    }
-
-    // medium nft mint
-    if (currentTime > 20.0 && currentTime <= 30.0) {
-      // random 1 - 8
-      const mrand = getRandomInt(1, 8);
-      callMintFromSource(
-        reduxState.keyringSourceAccount,
-        reduxState.nodeApi,
-        `M${mrand}`,
-        0,
-        0
-      ).catch(console.error);
-
-      setTimeout(() => {
-        getTokensByOwnerTemp(
-          reduxState.keyringSourceAccount.address,
-          reduxState.nodeApi
-        ).then((results) => {
-          console.log("medium results", results);
-          const recentMint = results[results.length - 1];
-          if (recentMint) {
-            callTransferFromSource(
-              reduxState.keyringSourceAccount,
-              reduxState.nodeApi,
-              recentMint[0],
-              recentMint[1],
-              reduxState.keyringAccount
-            ).catch(console.error);
-          }
-        });
-      }, 9000);
-    }
-
-    // easy nft mint
-    if (currentTime > 10.0 && currentTime <= 20.0) {
-      // random 1 - 16
-      const mrand = getRandomInt(1, 16);
-      callMintFromSource(
-        reduxState.keyringSourceAccount,
-        reduxState.nodeApi,
-        `E${mrand}`,
-        0,
-        0
-      ).catch(console.error);
-
-      setTimeout(() => {
-        getTokensByOwnerTemp(
-          reduxState.keyringSourceAccount.address,
-          reduxState.nodeApi
-        ).then((results) => {
-          console.log("ez results", results);
-          const recentMint = results[results.length - 1];
-          console.log("recent mint", recentMint);
-          if (recentMint) {
-            callTransferFromSource(
-              reduxState.keyringSourceAccount,
-              reduxState.nodeApi,
-              recentMint[0],
-              recentMint[1],
-              reduxState.keyringAccount
-            ).catch(console.error);
-          }
-        });
-      }, 9000);
-    }
+    // setPlayBtnDisable(true)
   };
 
   function formatDuration(duration) {
@@ -345,8 +327,6 @@ function MusicPlayer() {
       .duration(duration, "seconds")
       .format("mm:ss", { trim: false });
   }
-
-  const cur = formatDuration(currentTime);
 
   const startTimer = () => {
     // Clear any timers already running
@@ -379,7 +359,7 @@ function MusicPlayer() {
   };
 
   const dur = formatDuration(duration);
-
+  let cur = formatDuration(currentTime);
   useEffect(() => {
     console.log("acct state", reduxState.account);
     if (isPlaying) {
@@ -393,15 +373,162 @@ function MusicPlayer() {
         duration: currentTime,
         user_publickey: reduxState.account,
       });
+      setMintAndTransfer(`${song_src}_${currentTime}`);
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    console.log("user tok cats value", userTokenCategories);
+    if (!mintAndTransfer || !userTokenCategories) return;
+
+    if (currentTime > 30.0) {
+      callMintFromSource(
+        reduxState.keyringSourceAccount,
+        reduxState.nodeApi,
+        "H",
+        0,
+        0
+      ).catch(console.error).then(setIsLoading(true));
+
+      setTimeout(() => {
+        getTokensBySource(
+          reduxState.keyringSourceAccount.address,
+          reduxState.nodeApi
+        ).then((results) => {
+          const recentMint = results[results.length - 1];
+          if (recentMint) {
+            callTransferFromSource(
+              reduxState.keyringSourceAccount,
+              reduxState.nodeApi,
+              recentMint[0],
+              recentMint[1],
+              reduxState.keyringAccount
+            ).catch(console.error);
+          }
+          setPlayBtnDisable(false);
+          setMintAndTransferDone(`H${currentTime}_${recentMint[1]}`);
+          // dispatch({
+          //   type: ACTIONS.SET_MINT_TRANSFER_RUN_VALUE,
+          //   payload: {
+          //     newMintTransferRunValue: `H${currentTime}_${recentMint[1]}`
+          //   }
+          // });
+          setIsLoading(false)
+
+        });
+      }, 9000);
+    }
+
+    // medium nft mint
+    if (currentTime > 20.0 && currentTime <= 30.0) {
+      const mNums = [1, 2, 3, 4, 5, 6, 7, 8];
+      const mUTCs = userTokenCategories.filter((utc) => utc.includes("M"));
+      console.log("ez utcs", mUTCs);
+      const mrandAry = mNums.filter((mNum) => !mUTCs.includes(`M${mNum}`));
+      console.log("m rand ary", mrandAry);
+      // random 1 - 8
+      const mrand = mrandAry[getRandomInt(0, mrandAry.length - 1)];
+      console.log("m rand", mrand);
+
+      callMintFromSource(
+        reduxState.keyringSourceAccount,
+        reduxState.nodeApi,
+        `M${mrand}`,
+        0,
+        0
+      ).catch(console.error).then(setIsLoading(true));
+
+      setTimeout(() => {
+        getTokensBySource(
+          reduxState.keyringSourceAccount.address,
+          reduxState.nodeApi
+        ).then((results) => {
+          console.log("medium results", results);
+          const recentMint = results[results.length - 1];
+          if (recentMint) {
+            callTransferFromSource(
+              reduxState.keyringSourceAccount,
+              reduxState.nodeApi,
+              recentMint[0],
+              recentMint[1],
+              reduxState.keyringAccount
+            ).catch(console.error);
+          }
+          setPlayBtnDisable(false);
+          setMintAndTransferDone(`M${currentTime}_${recentMint[1]}`);
+          // dispatch({
+          //   type: ACTIONS.SET_MINT_TRANSFER_RUN_VALUE,
+          //   payload: {
+          //     newMintTransferRunValue: `M${currentTime}_${recentMint[1]}`
+          //   }
+          // });
+          setIsLoading(false)
+
+        });
+      }, 9000);
+    }
+
+    // easy nft mint
+    if (currentTime > 10.0 && currentTime <= 20.0) {
+      const eNums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+      const ezUTCs = userTokenCategories.filter((utc) => utc.includes("E"));
+      console.log("ez utcs", ezUTCs);
+      const erandAry = eNums.filter((eNum) => !ezUTCs.includes(`E${eNum}`));
+      console.log("e rand ary", erandAry);
+      // random 1 - 16
+      const erand = erandAry[getRandomInt(0, erandAry.length - 1)];
+      console.log("e rand", erand);
+
+      callMintFromSource(
+        reduxState.keyringSourceAccount,
+        reduxState.nodeApi,
+        `E${erand}`,
+        0,
+        0
+      ).catch(console.error).then(setIsLoading(true));
+
+      setTimeout(() => {
+        getTokensBySource(
+          reduxState.keyringSourceAccount.address,
+          reduxState.nodeApi
+        ).then((results) => {
+          console.log("ez results", results);
+          const recentMint = results[results.length - 1];
+          console.log("recent mint", recentMint);
+          if (recentMint) {
+            callTransferFromSource(
+              reduxState.keyringSourceAccount,
+              reduxState.nodeApi,
+              recentMint[0],
+              recentMint[1],
+              reduxState.keyringAccount
+            ).catch(console.error);
+          }
+          setPlayBtnDisable(false);
+
+          setMintAndTransferDone(`H${currentTime}_${recentMint[1]}`);
+          // dispatch({
+          //   type: ACTIONS.SET_MINT_TRANSFER_RUN_VALUE,
+          //   payload: {
+          //     newMintTransferRunValue: `E${currentTime}_${recentMint[1]}`
+          //   }
+          // });
+          setIsLoading(false)
+
+        });
+      }, 9000);
+    }
+
+    // setIsLoading(false)
+
+  }, [mintAndTransfer]);
 
   useEffect(() => {
     console.log('track idx state n play', reduxState.trackIndex);
     if (reduxState && reduxState.trackIndex && reduxState.trackIndex.clicked) {
       setIsPlaying(true)
     }
-   
+
   }, [reduxState.trackIndex])
 
   const handleVol = (e) => {
@@ -478,53 +605,68 @@ function MusicPlayer() {
             </Text>
           </Box>
         </Box>
-        <Box>
-          <Button
-            size="lg"
-            variant="ghost"
-            type="button"
-            color="white"
-            aria-label="Previous"
-            onClick={onPrevTrack}
-            mr={2}
-          >
-            <FaCaretLeft />
-          </Button>
-          {isPlaying ? (
+        <LoadingOverlay
+          active={isLoading}
+          spinner
+          styles={{
+            overlay: (base) => ({
+              ...base,
+              background: 'rgba(0, 0, 0, 0.08)'
+            })
+          }}
+        >
+          <Box>
             <Button
               size="lg"
               variant="ghost"
               type="button"
+              color="white"
               aria-label="Previous"
-              color="white"
-              onClick={() => setIsPlaying(false)}
+              onClick={onPrevTrack}
+              mr={2}
+              disabled={playBtnDisable}
             >
-              <FaPause />
+              <FaCaretLeft />
             </Button>
-          ) : (
+            {isPlaying ? (
+              <Button
+                size="lg"
+                variant="ghost"
+                type="button"
+                aria-label="Previous"
+                color="white"
+                onClick={() => setIsPlaying(false)}
+              >
+                <FaPause />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                size="lg"
+                variant="ghost"
+                color="white"
+                onClick={() => setIsPlaying(true)}
+                aria-label="Play"
+                disabled={playBtnDisable}
+              >
+                <FaPlay />
+              </Button>
+            )}
             <Button
               type="button"
               size="lg"
               variant="ghost"
+              aria-label="Next"
+              onClick={onNextTrack}
               color="white"
-              onClick={() => setIsPlaying(true)}
-              aria-label="Play"
+              ml={2}
+              disabled={playBtnDisable}
             >
-              <FaPlay />
+              <FaCaretRight />
             </Button>
-          )}
-          <Button
-            type="button"
-            size="lg"
-            variant="ghost"
-            aria-label="Next"
-            onClick={onNextTrack}
-            color="white"
-            ml={2}
-          >
-            <FaCaretRight />
-          </Button>
-        </Box>
+          </Box>
+        </LoadingOverlay>
+
         {/* <MotionBox d="flex" alignItems="center" bg="gray.500" h="0.5" w="800px">
           <MotionBox
             style={{ x }}
@@ -551,7 +693,7 @@ function MusicPlayer() {
           _hover={{ color: "pink.500" }}
         >
           <Box color="white" mr={1}>
-            Current Duration: {cur}
+            Current Duration: {curTime}
           </Box>
           <Box color="white" ml={2}>
             Total Duration: {dur}

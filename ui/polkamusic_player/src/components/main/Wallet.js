@@ -48,6 +48,7 @@ function Wallet(props) {
         }
       });
 
+   
       // find keyring account, set to keyring account state
       // for future use e.g. adding to keyring addresses, etc
       if (reduxState.keyringAccounts && initialAddr) {

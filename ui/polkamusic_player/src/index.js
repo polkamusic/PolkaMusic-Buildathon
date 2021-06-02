@@ -11,7 +11,7 @@ import { createReduxStore } from './redux/Redux';
 // use redux insted of prop drill
 cryptoWaitReady()
   .then(() => {
-    try {     
+    try {
       async function getAccounts() {
         await web3Enable('PolkaMusic Player');
         let allAccounts = await web3Accounts();

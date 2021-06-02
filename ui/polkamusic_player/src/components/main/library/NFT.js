@@ -5,6 +5,7 @@ import getTokensByOwner from "../../../chainApis/getTokensByOwner";
 import getTokens from "../../../chainApis/getTokens";
 import { useDispatch, useSelector } from "react-redux";
 import { Box, Text } from "@chakra-ui/react";
+import LoadingOverlay from 'react-loading-overlay';
 import {
   u8aToString
 } from '@polkadot/util';
@@ -39,6 +40,7 @@ function NFT() {
   const [easyNftCompleted, setEasyNftCompleted] = useState(false)
   const [mediumNftCompleted, setMediumNftCompleted] = useState(false)
   const [hardNftCompleted, setHardNftCompleted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const [easyTupleTokens, setEasyTupleTokens] = useState(null)
   const [tokenCategoryTupleMap, setTokenCategoryTupleMap] = useState(null)
@@ -88,8 +90,8 @@ function NFT() {
                   setGlowHeadphones(true)
                   // burn nfts at node
 
-                  console.log('nfts to burn', tokenCategoryTupleMap);
-                  console.log('tokenCategory TupleMap to burn', tokenCategoryTupleMap);
+                  console.log('nft-nfts to burn', tokenCategoryTupleMap);
+                  console.log('nft-tokenCategory TupleMap to burn', tokenCategoryTupleMap);
 
 
                   if (!tokenCategoryTupleMap || !nftTokens) return
@@ -123,6 +125,7 @@ function NFT() {
                       const tokenTuple = tokenCategoryTupleMap[nftToken]
                       tokenTuplesToBurn.push(tokenTuple)
                     }
+                    console.log('nft-tokenTuplesToBurn', tokenTuplesToBurn);
                     // callMultiBurnNfts(keyringBurnAccount, nodeApi, tokenTuplesToBurn, keyringAccount, notify)
                     callMultiBurnNfts(
                       reduxState.keyringBurnAccount,
@@ -143,6 +146,8 @@ function NFT() {
                       const tokenTuple = tokenCategoryTupleMap[nftToken]
                       tokenTuplesToBurn.push(tokenTuple)
                     }
+                    console.log('nft-tokenTuplesToBurn', tokenTuplesToBurn);
+
                     // callMultiBurnNfts(keyringBurnAccount, nodeApi, tokenTuplesToBurn, keyringAccount, notify)
                     callMultiBurnNfts(
                       reduxState.keyringBurnAccount,
@@ -156,9 +161,9 @@ function NFT() {
                     })
                   }
 
-      
 
-                 
+
+
                   // back to normal
                   setTimeout(() => {
                     setGlowHeadphones(false)
@@ -176,17 +181,18 @@ function NFT() {
     console.log('nft redux', reduxState);
     if (!reduxState || !reduxState.account || !reduxState.nodeApi) return;
     // get tokens and display
+    setIsLoading(true)
     let userTokens;
     async function getTokensByOwnerTemp(addr, api, getUserTokens) {
       if (!api || !addr) {
-        console.log('api or address is missing')
+        console.log('nft-api or address is missing')
         return
       }
 
       const [userTokensOwner] = await Promise.all([
         api.query.nftModule.tokensByOwner(addr, []) // addr = account id
       ]);
-      console.log('userTokensOwner', userTokensOwner);
+      console.log('nft-userTokensOwner', userTokensOwner);
 
       // token count by class id
       const [tokenClasses] = await Promise.all([
@@ -200,7 +206,7 @@ function NFT() {
       let userTokenCollectionTemp = [];
       let tokenCountAry = [];
       for (let t = 0; t < tokenCount; t++) { tokenCountAry.push(t) }
-      console.log('token count array', tokenCountAry);
+      console.log('nft-token count array', tokenCountAry);
       for (const tokencount of tokenCountAry) {
         const usertoken = await api.query.nftModule.tokensByOwner(addr, [0, tokencount])
         userTokenCollectionTemp.push(usertoken)
@@ -208,26 +214,27 @@ function NFT() {
 
       // console.log('userTokenCollection temp', userTokenCollectionTemp);
       const userTokenCollectionHasValue = userTokenCollectionTemp.filter(utcol => !utcol.value.isEmpty)
-      console.log('userTokenCollection has values', userTokenCollectionHasValue);
+      console.log('nft-userTokenCollection has values', userTokenCollectionHasValue);
 
       const userTokenCollection = userTokenCollectionHasValue.map(utcol => {
         return [utcol.value[0].words[0], utcol.value[1].words[0]]
 
       })
-      console.log('userTokenCollection', userTokenCollection);
+      console.log('nft-userTokenCollection', userTokenCollection);
 
       setEasyTupleTokens(userTokenCollection)
       return userTokenCollection
     }
     getTokensByOwnerTemp(reduxState.account, reduxState.nodeApi)
       .then(results => {
-        console.log('user token id/s', results);
+        console.log('nft-user token id/s', results);
         setUserTokenIDs(results)
       });
 
-  }, [reduxState.account, reduxState.nodeApi])
+  }, [reduxState?.account, reduxState?.nodeApi])
 
   useEffect(() => {
+    console.log('nft page area logs');
     console.log('user token ids', userTokenIDs);
     if (userTokenIDs) {
 
@@ -250,7 +257,7 @@ function NFT() {
         return nftDataCollectionFormated
       }
 
-      getTokens(userTokenIDs, reduxState.nodeApi)
+      getTokens(userTokenIDs, reduxState?.nodeApi)
         .then(results => {
           console.log('nft tokens', results);
           if (results) setNftTokens(results)
@@ -297,10 +304,12 @@ function NFT() {
           setEasyNftTokens(ezNftTokens)
           setMediumNftTokens(medNftTokens)
           setHardNftTokens(hardNftTokens)
+
+          setIsLoading(false)
         })
     }
 
-  }, [reduxState.account, reduxState.nodeApi, userTokenIDs])
+  }, [reduxState?.account, reduxState?.nodeApi, userTokenIDs])
 
   return (
     <Flex
@@ -311,48 +320,59 @@ function NFT() {
       h="100vh"
     >
       <ToastContainer />
-      <Flex alignItems="center" justifyContent="center" direction="row" mb={8}>
-        <NftPuzzle nftTokens={nftTokens} glowHeadphones={glowHeadphones} />
-        <Box d="flex" flexDir="column" ml={3}>
-          <Box
-            borderRadius="md"
-            height="120px"
-            mb={6}
-            bgGradient="linear(to-l, #7928CA, #FF0080)"
-            color="white"
-          >
-            <Text fontSize="md" color="gray.100" p={2}>
-              Easy NFT &nbsp; &nbsp; &nbsp; {easyNftTokens && (easyNftTokens.length === 16) ? `${easyNftCompleted ? 'Claimed' : 'Cleared'}!` : `${easyNftTokens.length >= 16 ? '16' : easyNftTokens.length}/16`}
-            </Text>
-            <Text fontSize="md" color="gray.100" p={2}>
-              Medium NFT &nbsp;{mediumNftTokens && (mediumNftTokens.length === 8) ? `${mediumNftCompleted ? 'Claimed' : 'Cleared'}!` : `${mediumNftTokens.length >= 8 ? '8' : mediumNftTokens.length}/8`}
-            </Text>
-            <Text fontSize="md" color="gray.100" p={2}>
-              Hard NFT  &nbsp; &nbsp; &nbsp; {hardNftTokens && (hardNftTokens.length) === 1 ? `${hardNftCompleted ? 'Claimed' : 'Cleared'}!` : `${hardNftTokens.length >= 1 ? '1': '0'}/1`}
-            </Text>
+      <LoadingOverlay
+        active={isLoading}
+        spinner
+        text='Loading...'
+        styles={{
+          overlay: (base) => ({
+            ...base,
+            background: 'rgba(0, 0, 0, 0.08)'
+          })
+        }}
+      >
+        <Flex alignItems="center" justifyContent="center" direction="row" mb={8}>
+          <NftPuzzle nftTokens={nftTokens} glowHeadphones={glowHeadphones} />
+          <Box d="flex" flexDir="column" ml={3}>
+            <Box
+              borderRadius="md"
+              height="120px"
+              mb={6}
+              bgGradient="linear(to-l, #7928CA, #FF0080)"
+              color="white"
+            >
+              <Text fontSize="md" color="gray.100" p={2}>
+                Easy NFT &nbsp; &nbsp; &nbsp; {easyNftTokens && (easyNftTokens.length === 16) ? `${easyNftCompleted ? 'Claimed' : 'Cleared'}!` : `${easyNftTokens.length >= 16 ? '16' : easyNftTokens.length}/16`}
+              </Text>
+              <Text fontSize="md" color="gray.100" p={2}>
+                Medium NFT &nbsp;{mediumNftTokens && (mediumNftTokens.length === 8) ? `${mediumNftCompleted ? 'Claimed' : 'Cleared'}!` : `${mediumNftTokens.length >= 8 ? '8' : mediumNftTokens.length}/8`}
+              </Text>
+              <Text fontSize="md" color="gray.100" p={2}>
+                Hard NFT  &nbsp; &nbsp; &nbsp; {hardNftTokens && (hardNftTokens.length) === 1 ? `${hardNftCompleted ? 'Claimed' : 'Cleared'}!` : `${hardNftTokens.length >= 1 ? '1' : '0'}/1`}
+              </Text>
+            </Box>
+
+            <ButtonModal
+              value="Get a Coffee Mug"
+              disableBurnButton={disableBurnEasyButton}
+              tokenCategory="Easy"
+              tokenCount={16}
+            />
+            <ButtonModal
+              value="Get a Concert Ticket"
+              disableBurnButton={disableBurnMediumButton}
+              tokenCount={8}
+              tokenCategory="Medium"
+            />
+            <ButtonModal
+              value="Get a BMW M5"
+              disableBurnButton={disableBurnHardButton}
+              tokenCount={1}
+              tokenCategory="Hard"
+            />
           </Box>
-
-          <ButtonModal
-            value="Get a Coffee Mug"
-            disableBurnButton={disableBurnEasyButton}
-            tokenCategory="Easy"
-            tokenCount={16}
-          />
-          <ButtonModal
-            value="Get a Concert Ticket"
-            disableBurnButton={disableBurnMediumButton}
-            tokenCount={8}
-            tokenCategory="Medium"
-          />
-          <ButtonModal
-            value="Get a BMW M5"
-            disableBurnButton={disableBurnHardButton}
-            tokenCount={1}
-            tokenCategory="Hard"
-          />
-        </Box>
-      </Flex>
-
+        </Flex>
+      </LoadingOverlay>
     </Flex>
   );
 }

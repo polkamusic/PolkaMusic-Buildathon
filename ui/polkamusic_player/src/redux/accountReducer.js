@@ -8,7 +8,8 @@ const initialState = {
   keyringAccount: null,
   keyringBurnAccount: null,
   keyringSourceAccount: null,
-  trackIndex: { idx: 0, clicked: false }
+  trackIndex: { idx: 0, clicked: false },
+  mintTransferRunValue: ''
 }
 
 function accountReducer(state = initialState, action) {
@@ -83,6 +84,15 @@ function accountReducer(state = initialState, action) {
       return {
         ...state,
         trackIndex: { ...state.trackIndex, ...newTrackIndex },
+      };
+    }
+
+    case ACTIONS.SET_MINT_TRANSFER_RUN_VAL: {
+      const { newMintTransferRunValue } = action.payload;
+
+      return {
+        ...state,
+        mintTransferRunValue: newMintTransferRunValue,
       };
     }
 
